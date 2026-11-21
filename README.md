@@ -16,6 +16,13 @@ php artisan make:filament-user        # cria o usuário de acesso
 php artisan serve                      # http://localhost:8000/admin
 ```
 
+## Docker
+```bash
+ADMIN_EMAIL=voce@exemplo.com ADMIN_PASSWORD='senha-forte' docker compose up -d --build
+# http://localhost:8080/admin  (porta: APP_PORT)
+```
+Um único container (FrankenPHP + `pdftotext`) com SQLite; banco, PDFs enviados e a chave da aplicação ficam no volume `geracao_storage`. Sem `ADMIN_EMAIL`/`ADMIN_PASSWORD`, crie o usuário com `docker compose exec app php artisan make:filament-user`. Se publicar atrás de HTTPS/domínio, defina `APP_URL`.
+
 ## Uso
 1. **Importar PDFs** (botão no Painel, Faturas, Compensações ou Importações) — aceita vários arquivos de uma vez; arquivos repetidos (mesmo hash) são ignorados, reimportar um mês atualiza os dados. Também via CLI: `php artisan geracao:importar arquivo1.pdf arquivo2.pdf`.
 2. **Geração das placas** → *Informar geração*: kWh totais gerados no mês pela UC geradora.
