@@ -74,6 +74,12 @@ class SolarInstallmentResource extends Resource
             ->toolbarActions([DeleteBulkAction::make()]);
     }
 
+    /** Telas ligadas à unidade geradora: ocultas para quem só alcança unidades beneficiárias. */
+    public static function canViewAny(): bool
+    {
+        return parent::canViewAny() && (auth()->user()?->hasGeneratorAccess() ?? false);
+    }
+
     public static function getPages(): array
     {
         return ['index' => ManageSolarInstallments::route('/')];

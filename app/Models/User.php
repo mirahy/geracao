@@ -54,6 +54,14 @@ class User extends Authenticatable implements FilamentUser
         return array_keys(array_filter($this->unitAccessMap()));
     }
 
+    /** O usuário alcança alguma unidade geradora? Quem só tem beneficiárias não usa as telas de geração, parcelas e importações. */
+    public function hasGeneratorAccess(): bool
+    {
+        $ids = $this->viewableUnitIds();
+
+        return $ids === null || ConsumerUnit::whereIn('id', $ids)->where('role', ConsumerUnit::ROLE_GENERATOR)->exists();
+    }
+
     public function canViewUnit(?int $unitId): bool
     {
         $ids = $this->viewableUnitIds();

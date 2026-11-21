@@ -2,11 +2,14 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Resources\ImportedDocuments\ImportedDocumentResource;
 use App\Filament\Resources\Invoices\Pages\ListInvoices;
 use App\Filament\Resources\Roles\Pages\CreateRole;
 use App\Filament\Resources\Roles\Pages\EditRole;
 use App\Filament\Resources\Roles\Pages\ListRoles;
 use App\Filament\Resources\SolarGenerations\Pages\ManageSolarGenerations;
+use App\Filament\Resources\SolarGenerations\SolarGenerationResource;
+use App\Filament\Resources\SolarInstallments\SolarInstallmentResource;
 use App\Filament\Resources\Users\Pages\CreateUser;
 use App\Filament\Resources\Users\Pages\ListUsers;
 use App\Models\ConsumerUnit;
@@ -133,6 +136,22 @@ class AccessControlTest extends TestCase
         $this->actingAs($noPanel)->get('/admin')->assertForbidden();
 
         $this->actingAs($this->userWith('Consulta', [$this->generator->id => false]))->get('/admin')->assertOk();
+    }
+
+    public function test_generator_screens_are_hidden_from_users_with_only_receiver_units(): void
+    {
+        $resources = [SolarGenerationResource::class, SolarInstallmentResource::class, ImportedDocumentResource::class];
+
+        $this->actingAs($this->userWith('Gestor', [$this->receiver->id => true]));
+        foreach ($resources as $resource) {
+            $this->assertFalse($resource::canViewAny(), $resource);
+        }
+        $this->get('/admin/solar-generations')->assertForbidden();
+
+        $this->actingAs($this->userWith('Gestor', [$this->receiver->id => true, $this->generator->id => false]));
+        foreach ($resources as $resource) {
+            $this->assertTrue($resource::canViewAny(), $resource);
+        }
     }
 
     public function test_user_and_role_management_require_permissions(): void
