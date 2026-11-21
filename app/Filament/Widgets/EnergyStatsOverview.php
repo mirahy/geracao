@@ -53,7 +53,7 @@ class EnergyStatsOverview extends StatsOverviewWidget
                 ->description('economia total − parcela das placas')
                 ->icon(Heroicon::OutlinedScale)->color($t['net_result'] >= 0 ? 'success' : 'danger'),
             Stat::make('Saldo de créditos', $kwh($t['balance']))
-                ->description('somatório do último saldo de cada UC')
+                ->description('recebido − compensado (acumulado), somando as UCs')
                 ->icon(Heroicon::OutlinedBattery100)->color('primary'),
             Stat::make('Compensado nas faturas', $kwh($t['compensated']))
                 ->description('kWh abatidos do consumo')

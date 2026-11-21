@@ -380,11 +380,7 @@ class EnergyDashboard
     {
         $gen = $this->generationSeries();
         $generated = array_sum(array_filter($gen['generated'], fn ($v) => $v !== null));
-        // Saldo de créditos: último saldo informado na fatura de cada UC
-        $latestBalance = $this->units()->sum(
-            fn ($unit) => $this->invoices()->where('consumer_unit_id', $unit->id)->sortByDesc('reference_month')->first()?->credit_balance_kwh ?? 0
-        );
-
+        $latestBalance = $this->units()->sum(fn ($unit) => $this->balanceFor($unit));
         $selfKwh = (float) array_sum(array_filter($gen['self_consumed'], fn ($v) => $v !== null));
         $selfAmount = (float) array_sum($this->selfConsumptionSeries()['amount']);
         $gridConsumption = (float) array_sum(array_map(fn ($v) => array_sum(array_filter($v, fn ($x) => $x !== null)), $this->consumptionSeries()));
@@ -427,7 +423,6 @@ class EnergyDashboard
             $invoices = $this->invoices()->where('consumer_unit_id', $unit->id);
             $histories = $this->histories()->where('consumer_unit_id', $unit->id);
             $consumption = $histories->isNotEmpty() ? $histories->sum('measured_kwh') : $invoices->sum('consumption_kwh');
-            $latestInvoice = $invoices->sortByDesc('reference_month')->first();
 
             $generated = (float) $this->generations()->where('consumer_unit_id', $unit->id)->sum('generated_kwh');
             $injected = (float) $histories->sum('injected_kwh');
@@ -450,7 +445,7 @@ class EnergyDashboard
                 'received' => (float) $this->transfers()->where('target_unit_id', $unit->id)->sum('kwh'),
                 'cost' => (float) $invoices->sum('total_amount'),
                 'savings' => (float) $invoices->sum(fn ($i) => $i->savings),
-                'balance' => $latestInvoice?->credit_balance_kwh,
+                'balance' => $this->balanceFor($unit),
             ];
         })->values();
     }
@@ -473,6 +468,33 @@ class EnergyDashboard
         }
 
         return $query->where($column, '>=', $months[0].'-01')->where($column, '<=', end($months).'-01');
+    }
+
+    /**
+     * Saldo de créditos (kWh) da UC até o último mês do período, calculado a partir dos dados importados
+     * (não usa o "Saldo acumulado" impresso na fatura):
+     * - beneficiária: créditos recebidos por transferência − créditos compensados nas faturas (acumulado);
+     * - geradora: saldo disponível do último demonstrativo de compensação.
+     */
+    public function balanceFor(ConsumerUnit $unit): float
+    {
+        $months = $this->months();
+        if (! $months) {
+            return 0.0;
+        }
+        $end = end($months).'-01';
+
+        if ($unit->isGenerator()) {
+            $statement = EnergyStatement::where('consumer_unit_id', $unit->id)
+                ->where('reference_month', '<=', $end)->orderByDesc('reference_month')->first();
+
+            return (float) ($statement?->balance_available_kwh ?? 0);
+        }
+
+        $received = CreditTransfer::where('target_unit_id', $unit->id)->where('reference_month', '<=', $end)->sum('kwh');
+        $compensated = Invoice::where('consumer_unit_id', $unit->id)->where('reference_month', '<=', $end)->sum('compensated_kwh');
+
+        return round($received - $compensated, 2);
     }
 
     /** Custo das placas de uma UC no período: parcela própria − rateio abatido + rateio cobrado. */

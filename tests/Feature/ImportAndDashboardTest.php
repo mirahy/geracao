@@ -97,7 +97,11 @@ class ImportAndDashboardTest extends TestCase
         $this->assertSame(1300.0, $totals['generated']);
         $this->assertSame(1222.0, $totals['transferred']); // 231 + 163 + 218 + 271 + 339
         $this->assertEqualsWithDelta(306.29, $totals['cost'], 0.001);
-        $this->assertSame(1117.0, $totals['balance']); // 737 + 56 + 324
+        // saldo calculado (recebido − compensado), sem usar o saldo impresso na fatura:
+        // geradora 737 (demonstrativo) + UC 259: 218+271−141 + Campo Grande: 339−290 + UC 310: 231+163
+        $this->assertSame(737.0 + 348.0 + 49.0 + 394.0, $totals['balance']);
+        $receiver = ConsumerUnit::where('uc_number', '25953005179')->first();
+        $this->assertSame(348.0, $d->balanceFor($receiver));
 
         // autoconsumo 1300 - 911 = 389 kWh, valorizado pela tarifa da fatura (1,30983)
         $this->assertSame(389.0, $totals['self_consumed']);
