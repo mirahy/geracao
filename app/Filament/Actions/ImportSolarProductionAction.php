@@ -9,6 +9,7 @@ use App\Services\Solar\SolarGenerationConsolidator;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\Storage;
@@ -39,6 +40,10 @@ class ImportSolarProductionAction
                     ->directory('imports')
                     ->visibility('private')
                     ->required(),
+                Toggle::make('allow_incomplete')
+                    ->label('Gravar também períodos incompletos')
+                    ->helperText('Quando a planilha não cobre todos os dias do período da fatura, grava a soma dos dias disponíveis (marcada como parcial nas observações). Desligado, esses meses são ignorados.')
+                    ->default(false),
             ])
             ->action(function (array $data): void {
                 $disk = Storage::disk('local');
@@ -63,12 +68,12 @@ class ImportSolarProductionAction
                     );
                 }
 
-                $result = app(SolarGenerationConsolidator::class)->consolidate($unit);
+                $result = app(SolarGenerationConsolidator::class)->consolidate($unit, (bool) ($data['allow_incomplete'] ?? false));
 
                 $body = collect([
                     count($rows).' dia(s) importado(s).',
                     $result['updated'] ? "{$result['updated']} mês(es) atualizado(s) pelo período da fatura." : 'Nenhum mês fechado: importe as faturas da unidade geradora cujo período esteja coberto pela planilha.',
-                    $result['incomplete'] ? 'Períodos com dias faltando (não gravados): '.implode(', ', $result['incomplete']).'.' : null,
+                    $result['incomplete'] ? 'Períodos com dias faltando ('.($data['allow_incomplete'] ?? false ? 'gravados como parciais' : 'não gravados').'): '.implode(', ', $result['incomplete']).'.' : null,
                     $result['kept_manual'] ? 'Mantidos os valores manuais de: '.implode(', ', $result['kept_manual']).'.' : null,
                 ])->filter()->implode("\n");
 

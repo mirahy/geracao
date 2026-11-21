@@ -11,14 +11,15 @@ use Illuminate\Support\Carbon;
 /**
  * Soma a produção diária de cada período de leitura da fatura da unidade geradora
  * (dias após a leitura anterior até a leitura atual, inclusive) e grava como a geração
- * do mês de referência da fatura. Lançamentos manuais nunca são sobrescritos.
+ * do mês de referência da fatura. Lançamentos manuais nunca são sobrescritos. Períodos com dias faltando só são gravados
+ * quando $allowIncomplete é verdadeiro (marcados como parciais nas observações).
  */
 class SolarGenerationConsolidator
 {
     /**
      * @return array{updated: int, incomplete: array<int, string>, kept_manual: array<int, string>}
      */
-    public function consolidate(ConsumerUnit $unit): array
+    public function consolidate(ConsumerUnit $unit, bool $allowIncomplete = false): array
     {
         $result = ['updated' => 0, 'incomplete' => [], 'kept_manual' => []];
 
@@ -29,14 +30,14 @@ class SolarGenerationConsolidator
             ->get();
 
         foreach ($invoices as $invoice) {
-            $this->consolidateInvoice($unit, $invoice, $result);
+            $this->consolidateInvoice($unit, $invoice, $allowIncomplete, $result);
         }
 
         return $result;
     }
 
     /** @param array{updated: int, incomplete: array<int, string>, kept_manual: array<int, string>} $result */
-    private function consolidateInvoice(ConsumerUnit $unit, Invoice $invoice, array &$result): void
+    private function consolidateInvoice(ConsumerUnit $unit, Invoice $invoice, bool $allowIncomplete, array &$result): void
     {
         $start = Carbon::parse($invoice->reading_previous_date)->addDay()->startOfDay();
         $end = Carbon::parse($invoice->reading_current_date)->startOfDay();
@@ -51,10 +52,13 @@ class SolarGenerationConsolidator
         }
 
         $expected = (int) $start->diffInDays($end) + 1;
-        if ($days->count() < $expected) {
+        $partial = $days->count() < $expected;
+        if ($partial) {
             $result['incomplete'][] = "{$label} ({$days->count()} de {$expected} dias)";
 
-            return;
+            if (! $allowIncomplete) {
+                return;
+            }
         }
 
         $month = Carbon::parse($invoice->reference_month)->startOfMonth()->toDateString();
@@ -71,7 +75,8 @@ class SolarGenerationConsolidator
             [
                 'generated_kwh' => round($days->sum('generated_kwh'), 2),
                 'source' => 'planilha',
-                'notes' => 'Soma da produção diária de '.$start->format('d/m/Y').' a '.$end->format('d/m/Y').' (período da fatura).',
+                'notes' => 'Soma da produção diária de '.$start->format('d/m/Y').' a '.$end->format('d/m/Y').' (período da fatura)'
+                    .($partial ? ". Parcial: apenas {$days->count()} de {$expected} dias na planilha." : '.'),
             ],
         );
         $result['updated']++;

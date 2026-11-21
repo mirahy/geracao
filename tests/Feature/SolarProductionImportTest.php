@@ -97,6 +97,23 @@ class SolarProductionImportTest extends TestCase
         $this->assertSame(0, SolarGeneration::count());
     }
 
+    public function test_incomplete_period_can_be_saved_when_allowed(): void
+    {
+        $generator = $this->importGeneratorInvoice();
+        $this->actingAs(User::factory()->create());
+
+        Livewire::test(ManageSolarGenerations::class)
+            ->callAction('importarProducaoDiaria', [
+                'consumer_unit_id' => $generator->id,
+                'file' => $this->upload('2026-11-07', '2026-11-16'),
+                'allow_incomplete' => true,
+            ]);
+
+        $generation = SolarGeneration::sole();
+        $this->assertSame(100.0, $generation->generated_kwh); // 10 dias × 10 kWh
+        $this->assertStringContainsString('Parcial: apenas 10 de 31 dias', $generation->notes);
+    }
+
     public function test_manual_entry_is_kept_and_reimport_updates_spreadsheet_rows(): void
     {
         $generator = $this->importGeneratorInvoice();
