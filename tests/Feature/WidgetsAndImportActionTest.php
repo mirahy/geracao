@@ -56,6 +56,7 @@ class WidgetsAndImportActionTest extends TestCase
             Livewire::test($widget)->assertOk();
             Livewire::test($widget, ['pageFilters' => ['unit_id' => $generator->id, 'from' => '2026-09', 'to' => '2026-11']])->assertOk();
             Livewire::test($widget, ['record' => $generator])->assertOk();
+            Livewire::test($widget, ['pageFilters' => ['unit_id' => '', 'from' => '', 'to' => '']])->assertOk();
         }
     }
 

@@ -21,9 +21,9 @@ trait UsesEnergyDashboard
         $filters = $this->pageFilters ?? [];
 
         return EnergyDashboard::make(
-            $this->record?->getKey() ?? ($filters['unit_id'] ?? null),
-            $filters['from'] ?? null,
-            $filters['to'] ?? null,
+            $this->record?->getKey() ?? (filled($filters['unit_id'] ?? null) ? (int) $filters['unit_id'] : null),
+            filled($filters['from'] ?? null) ? $filters['from'] : null,
+            filled($filters['to'] ?? null) ? $filters['to'] : null,
         );
     }
 }
