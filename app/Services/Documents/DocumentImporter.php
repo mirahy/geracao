@@ -8,6 +8,7 @@ use App\Models\EnergyHistory;
 use App\Models\EnergyStatement;
 use App\Models\ImportedDocument;
 use App\Models\Invoice;
+use App\Models\Scopes\AccessibleUnitsScope;
 use App\Services\Solar\SolarGenerationConsolidator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -26,6 +27,12 @@ class DocumentImporter
      * @param  string|null  $originalName  nome original do arquivo enviado
      */
     public function import(string $path, ?string $originalName = null): ImportedDocument
+    {
+        // A importação precisa enxergar todas as unidades (ex.: achar a UC já cadastrada), seja qual for o usuário.
+        return AccessibleUnitsScope::withoutScope(fn () => $this->importFile($path, $originalName));
+    }
+
+    private function importFile(string $path, ?string $originalName): ImportedDocument
     {
         $hash = hash_file('sha256', $path);
         $name = $originalName ?: basename($path);
@@ -72,6 +79,11 @@ class DocumentImporter
 
     /** Importa a partir do texto já extraído (útil em testes). */
     public function importText(string $text, ?ImportedDocument $document = null): ImportedDocument
+    {
+        return AccessibleUnitsScope::withoutScope(fn () => $this->processText($text, $document));
+    }
+
+    private function processText(string $text, ?ImportedDocument $document): ImportedDocument
     {
         $document ??= ImportedDocument::firstOrNew(
             ['hash' => hash('sha256', $text)],

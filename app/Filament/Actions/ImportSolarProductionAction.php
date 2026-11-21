@@ -6,6 +6,7 @@ use App\Models\ConsumerUnit;
 use App\Models\SolarDailyProduction;
 use App\Services\Solar\DailyProductionSpreadsheet;
 use App\Services\Solar\SolarGenerationConsolidator;
+use App\Support\UnitOptions;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
@@ -22,14 +23,15 @@ class ImportSolarProductionAction
             ->label('Importar planilha diária')
             ->icon(Heroicon::OutlinedTableCells)
             ->color('primary')
+            ->visible(fn () => auth()->user()?->can('geracao.editar'))
             ->modalHeading('Importar produção diária das placas')
             ->modalDescription('Envie a planilha "Estatísticas Diárias" (.xlsx) do aplicativo do inversor. Os dias são somados conforme o período de leitura de cada fatura da unidade geradora. Períodos incompletos e valores diferentes dos lançados manualmente abrem uma tela para você decidir.')
             ->modalSubmitActionLabel('Importar')
             ->schema([
                 Select::make('consumer_unit_id')
                     ->label('Unidade geradora')
-                    ->options(fn () => ConsumerUnit::where('role', ConsumerUnit::ROLE_GENERATOR)->orderBy('name')->pluck('name', 'id'))
-                    ->default(fn () => ConsumerUnit::where('role', ConsumerUnit::ROLE_GENERATOR)->value('id'))
+                    ->options(fn () => UnitOptions::editableGeneratorOptions())
+                    ->default(fn () => UnitOptions::editableGenerators()->value('id'))
                     ->required(),
                 FileUpload::make('file')
                     ->label('Planilha (.xlsx)')

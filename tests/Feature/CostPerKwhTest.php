@@ -67,7 +67,7 @@ class CostPerKwhTest extends TestCase
     public function test_solar_cost_card_follows_the_period_and_is_hidden_for_receivers(): void
     {
         [$generator, $receiver] = $this->setUpData();
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->administrator()->create());
         SolarGeneration::create(['consumer_unit_id' => $generator->id, 'reference_month' => '2026-10-01', 'generated_kwh' => 500]);
         SolarInstallment::create(['consumer_unit_id' => $generator->id, 'amount' => 100, 'start_month' => '2026-10-01', 'end_month' => '2026-10-01']);
 
@@ -96,7 +96,7 @@ class CostPerKwhTest extends TestCase
     public function test_flag_is_only_offered_for_receivers_and_saved(): void
     {
         [$generator, $receiver] = $this->setUpData();
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->administrator()->create());
 
         Livewire::test(EditConsumerUnit::class, ['record' => $generator->getRouteKey()])
             ->assertFormFieldHidden('counts_in_generator_cost');

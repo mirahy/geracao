@@ -24,6 +24,11 @@ class Dashboard extends BaseDashboard
 
     protected static ?string $title = 'Painel de energia solar';
 
+    public static function canAccess(): bool
+    {
+        return (bool) auth()->user()?->can('painel.ver');
+    }
+
     public function filtersForm(Schema $schema): Schema
     {
         return EnergyFilters::configure($schema);

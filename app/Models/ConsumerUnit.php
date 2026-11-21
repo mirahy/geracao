@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\ScopedToAccessibleUnits;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -9,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class ConsumerUnit extends Model
 {
     use HasFactory;
+    use ScopedToAccessibleUnits;
 
     public const ROLE_GENERATOR = 'generator';
 
@@ -79,5 +81,15 @@ class ConsumerUnit extends Model
     public function getFormattedUcAttribute(): string
     {
         return self::formatUcNumber($this->uc_number);
+    }
+
+    public function accessibleUnitColumns(): array
+    {
+        return ['id'];
+    }
+
+    public function accessibleUnitId(): ?int
+    {
+        return $this->id;
     }
 }

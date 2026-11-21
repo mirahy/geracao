@@ -7,6 +7,7 @@ use App\Models\CreditTransfer;
 use App\Models\EnergyHistory;
 use App\Models\EnergyStatement;
 use App\Models\Invoice;
+use App\Models\Scopes\AccessibleUnitsScope;
 use App\Models\SolarGeneration;
 use App\Models\SolarInstallment;
 use Carbon\CarbonImmutable;
@@ -260,7 +261,7 @@ class EnergyDashboard
             return $this->rates;
         }
 
-        $generated = SolarGeneration::all()
+        $generated = SolarGeneration::withoutGlobalScopes()->get()
             ->groupBy(fn ($g) => $g->reference_month->format('Y-m'))
             ->map(fn ($rows) => (float) $rows->sum('generated_kwh'));
 
@@ -281,7 +282,7 @@ class EnergyDashboard
      */
     public function solarCostPerKwh(): ?float
     {
-        $generated = SolarGeneration::all()
+        $generated = SolarGeneration::withoutGlobalScopes()->get()
             ->groupBy(fn ($g) => $g->reference_month->format('Y-m'))
             ->map(fn ($rows) => (float) $rows->sum('generated_kwh'));
 
@@ -314,7 +315,7 @@ class EnergyDashboard
         $first = CarbonImmutable::createFromFormat('Y-m-d', $months[0].'-01')->subMonth()->format('Y-m-d');
         $last = CarbonImmutable::createFromFormat('Y-m-d', end($months).'-01')->subMonth()->format('Y-m-d');
 
-        return $this->shareCharges ??= CreditTransfer::with('target')
+        return $this->shareCharges ??= CreditTransfer::withoutGlobalScopes()->with(['target' => fn ($q) => $q->withoutGlobalScopes()])
             ->whereBetween('reference_month', [$first, $last])
             ->get()
             ->filter(fn ($t) => $t->target->bills_solar_cost && $t->source_unit_id !== $t->target_unit_id)
@@ -344,6 +345,13 @@ class EnergyDashboard
      * @return array{rate: ?float, amount: float, kwh: float, parts: array<string, float>, per: string}
      */
     public function costPerKwh(ConsumerUnit $unit): array
+    {
+        // O custo da geradora soma faturas de outras unidades: usa todos os dados, não só os visíveis ao usuário.
+        return AccessibleUnitsScope::withoutScope(fn () => $this->computeCostPerKwh($unit));
+    }
+
+    /** @return array{rate: ?float, amount: float, kwh: float, parts: array<string, float>, per: string} */
+    private function computeCostPerKwh(ConsumerUnit $unit): array
     {
         $ids = [$unit->id];
 
@@ -586,7 +594,7 @@ class EnergyDashboard
     private function installments(): Collection
     {
         // sem filtro de UC: o rateio depende das parcelas e da geração de todas as UCs geradoras
-        return $this->installments ??= SolarInstallment::all();
+        return $this->installments ??= SolarInstallment::withoutGlobalScopes()->get();
     }
 
     private function invoices(): Collection
@@ -615,7 +623,7 @@ class EnergyDashboard
 
     private function transfers(): Collection
     {
-        return $this->transfers ??= $this->inRange(CreditTransfer::query()->with('target')
+        return $this->transfers ??= $this->inRange(CreditTransfer::query()->with(['target' => fn ($q) => $q->withoutGlobalScopes()])
             ->when($this->unitId, fn ($q) => $q->where(fn ($w) => $w->where('source_unit_id', $this->unitId)->orWhere('target_unit_id', $this->unitId))))->get();
     }
 }

@@ -3,6 +3,8 @@
 namespace Database\Factories;
 
 use App\Models\User;
+use App\Support\AccessControl;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -31,6 +33,15 @@ class UserFactory extends Factory
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
         ];
+    }
+
+    /** Usuário com o perfil Administrador (todas as permissões e unidades). */
+    public function administrator(): static
+    {
+        return $this->afterCreating(function (User $user): void {
+            app(RolesAndPermissionsSeeder::class)->run();
+            $user->assignRole(AccessControl::ADMIN_ROLE);
+        });
     }
 
     /**

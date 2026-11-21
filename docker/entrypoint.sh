@@ -24,4 +24,7 @@ if [ -n "$ADMIN_EMAIL" ] && [ -n "$ADMIN_PASSWORD" ]; then
         && echo "Usuário $ADMIN_EMAIL criado." || echo "Usuário $ADMIN_EMAIL já existe (ou não pôde ser criado)."
 fi
 
+# Perfis e permissões padrão; o primeiro usuário vira Administrador se ainda não houver um.
+php artisan db:seed --class=RolesAndPermissionsSeeder --force --no-interaction
+
 exec "$@"

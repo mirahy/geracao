@@ -3,10 +3,11 @@
 namespace App\Filament\Resources\SolarInstallments;
 
 use App\Filament\Resources\SolarInstallments\Pages\ManageSolarInstallments;
-use App\Models\ConsumerUnit;
 use App\Models\SolarInstallment;
 use App\Support\MonthOptions;
+use App\Support\UnitOptions;
 use BackedEnum;
+use Carbon\Carbon;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -41,15 +42,15 @@ class SolarInstallmentResource extends Resource
 
         return $schema->components([
             Select::make('consumer_unit_id')->label('Unidade geradora')
-                ->options(fn () => ConsumerUnit::where('role', ConsumerUnit::ROLE_GENERATOR)->orderBy('name')->pluck('name', 'id'))
-                ->default(fn () => ConsumerUnit::where('role', ConsumerUnit::ROLE_GENERATOR)->value('id'))
+                ->options(fn () => UnitOptions::editableGeneratorOptions())
+                ->default(fn () => UnitOptions::editableGenerators()->value('id'))
                 ->required(),
             TextInput::make('amount')->label('Valor da parcela (por mês)')->numeric()->minValue(0)->prefix('R$')->required(),
             Select::make('start_month')->label('Mês inicial')->options($months)->searchable()->required()
-                ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('Y-m-d') : null)
+                ->formatStateUsing(fn ($state) => $state ? Carbon::parse($state)->format('Y-m-d') : null)
                 ->helperText('Para informar um único mês, use o mesmo mês inicial e final.'),
             Select::make('end_month')->label('Mês final')->options($months)->searchable()
-                ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('Y-m-d') : null)
+                ->formatStateUsing(fn ($state) => $state ? Carbon::parse($state)->format('Y-m-d') : null)
                 ->afterOrEqual('start_month')
                 ->helperText('Deixe em branco se a parcela continua sem data final.'),
             TextInput::make('description')->label('Descrição')->placeholder('Financiamento das placas')->columnSpanFull(),

@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\ScopedToAccessibleUnits;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /** Parcela mensal paga pelas placas solares, válida de start_month até end_month (inclusive). */
 class SolarInstallment extends Model
 {
+    use ScopedToAccessibleUnits;
+
     protected $guarded = [];
 
     protected function casts(): array

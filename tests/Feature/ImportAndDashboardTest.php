@@ -115,7 +115,7 @@ class ImportAndDashboardTest extends TestCase
     public function test_panel_pages_render(): void
     {
         $this->importAll();
-        $user = User::factory()->create();
+        $user = User::factory()->administrator()->create();
         $unit = ConsumerUnit::where('role', 'generator')->first();
 
         $this->actingAs($user);

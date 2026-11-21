@@ -17,6 +17,7 @@ class ImportDocumentsAction
             ->label('Importar PDFs')
             ->icon(Heroicon::OutlinedArrowUpTray)
             ->color('primary')
+            ->visible(fn () => auth()->user()?->can('documentos.importar'))
             ->modalHeading('Importar faturas e demonstrativos')
             ->modalDescription('Envie as faturas (DANF3E) e os demonstrativos de compensação de energia injetada da Energisa. Os dados são extraídos e gravados automaticamente.')
             ->modalSubmitActionLabel('Importar')

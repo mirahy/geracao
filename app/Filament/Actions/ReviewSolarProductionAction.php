@@ -4,6 +4,7 @@ namespace App\Filament\Actions;
 
 use App\Models\ConsumerUnit;
 use App\Services\Solar\SolarGenerationConsolidator;
+use App\Support\UnitOptions;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Radio;
 use Filament\Notifications\Notification;
@@ -21,7 +22,7 @@ class ReviewSolarProductionAction
             ->icon(Heroicon::OutlinedExclamationTriangle)
             ->color('warning')
             ->badge(fn () => self::pending()->count() ?: null)
-            ->visible(fn () => self::pending()->isNotEmpty())
+            ->visible(fn () => auth()->user()?->can('geracao.editar') && self::pending()->isNotEmpty())
             ->modalHeading('Revisar produção importada')
             ->modalDescription('Estes meses não foram gravados automaticamente. Escolha para cada mês: gravar o valor da planilha, deixar para decidir depois ou descartar a pendência (ela só volta se uma nova planilha mudar os dados do mês).')
             ->modalSubmitActionLabel('Aplicar')
@@ -63,7 +64,7 @@ class ReviewSolarProductionAction
     /** @return Collection<int, ConsumerUnit> */
     private static function generators(): Collection
     {
-        return ConsumerUnit::where('role', ConsumerUnit::ROLE_GENERATOR)->get();
+        return UnitOptions::editableGenerators()->get();
     }
 
     private static function section(array $item): Section

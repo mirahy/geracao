@@ -3,10 +3,10 @@
 namespace App\Filament\Resources\SolarGenerations;
 
 use App\Filament\Resources\SolarGenerations\Pages\ManageSolarGenerations;
-use App\Models\ConsumerUnit;
 use App\Models\EnergyHistory;
 use App\Models\SolarGeneration;
 use App\Support\MonthOptions;
+use App\Support\UnitOptions;
 use BackedEnum;
 use Carbon\Carbon;
 use Filament\Actions\DeleteAction;
@@ -44,8 +44,8 @@ class SolarGenerationResource extends Resource
         return $schema->components([
             Select::make('consumer_unit_id')
                 ->label('Unidade geradora')
-                ->options(fn () => ConsumerUnit::where('role', ConsumerUnit::ROLE_GENERATOR)->orderBy('name')->pluck('name', 'id'))
-                ->default(fn () => ConsumerUnit::where('role', ConsumerUnit::ROLE_GENERATOR)->value('id'))
+                ->options(fn () => UnitOptions::editableGeneratorOptions())
+                ->default(fn () => UnitOptions::editableGenerators()->value('id'))
                 ->required()
                 ->live(),
             Select::make('reference_month')

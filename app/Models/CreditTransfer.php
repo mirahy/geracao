@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\ScopedToAccessibleUnits;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CreditTransfer extends Model
 {
+    use ScopedToAccessibleUnits;
+
     protected $guarded = [];
 
     protected function casts(): array
@@ -31,5 +34,15 @@ class CreditTransfer extends Model
     public function target(): BelongsTo
     {
         return $this->belongsTo(ConsumerUnit::class, 'target_unit_id');
+    }
+
+    public function accessibleUnitColumns(): array
+    {
+        return ['source_unit_id', 'target_unit_id'];
+    }
+
+    public function accessibleUnitId(): ?int
+    {
+        return $this->source_unit_id;
     }
 }

@@ -43,7 +43,7 @@ class WidgetsAndImportActionTest extends TestCase
     public function test_every_widget_renders_with_and_without_filters(): void
     {
         $this->importFixtures();
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->administrator()->create());
         $generator = ConsumerUnit::where('role', 'generator')->first();
         SolarGeneration::create(['consumer_unit_id' => $generator->id, 'reference_month' => '2026-11-01', 'generated_kwh' => 1200]);
 
@@ -63,7 +63,7 @@ class WidgetsAndImportActionTest extends TestCase
     public function test_dashboard_page_with_filters(): void
     {
         $this->importFixtures();
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->administrator()->create());
 
         Livewire::test(Dashboard::class)
             ->fillForm(['unit_id' => ConsumerUnit::first()->id, 'from' => '2026-09', 'to' => '2026-11'])
@@ -72,7 +72,7 @@ class WidgetsAndImportActionTest extends TestCase
 
     public function test_dashboard_renders_without_any_data(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->administrator()->create());
 
         $this->get('/admin')->assertOk();
         foreach ([EnergyStatsOverview::class, GenerationChart::class, CostChart::class, UnitsSummaryTable::class] as $widget) {
@@ -82,7 +82,7 @@ class WidgetsAndImportActionTest extends TestCase
 
     public function test_import_action_processes_uploaded_pdfs(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->administrator()->create());
         Storage::fake('local');
 
         // extrator falso: devolve o texto de fixture em vez de chamar o pdftotext
@@ -104,7 +104,7 @@ class WidgetsAndImportActionTest extends TestCase
     public function test_solar_generation_can_be_created_and_is_unique_per_month(): void
     {
         $this->importFixtures();
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->administrator()->create());
         $generator = ConsumerUnit::where('role', 'generator')->first();
 
         Livewire::test(ManageSolarGenerations::class)
@@ -121,7 +121,7 @@ class WidgetsAndImportActionTest extends TestCase
     public function test_installment_can_be_created_for_a_period(): void
     {
         $this->importFixtures();
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->administrator()->create());
         $generator = ConsumerUnit::where('role', 'generator')->first();
 
         Livewire::test(ManageSolarInstallments::class)
@@ -138,7 +138,7 @@ class WidgetsAndImportActionTest extends TestCase
     public function test_unit_page_filters_period_and_passes_filters_to_widgets(): void
     {
         $this->importFixtures();
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->administrator()->create());
         $generator = ConsumerUnit::where('role', 'generator')->first();
 
         Livewire::test(ViewConsumerUnit::class, ['record' => $generator->getKey()])

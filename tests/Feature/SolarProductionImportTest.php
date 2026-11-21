@@ -68,7 +68,7 @@ class SolarProductionImportTest extends TestCase
     public function test_days_are_summed_by_the_invoice_reading_period(): void
     {
         $generator = $this->importGeneratorInvoice();
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->administrator()->create());
 
         // A planilha vai além do período da fatura (leitura 16/10 → 16/11): só 17/10 a 16/11 entra no mês.
         $file = $this->upload('2026-10-10', '2026-11-20', 10);
@@ -87,7 +87,7 @@ class SolarProductionImportTest extends TestCase
     public function test_incomplete_period_opens_review_and_is_not_saved_until_confirmed(): void
     {
         $generator = $this->importGeneratorInvoice();
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->administrator()->create());
 
         $page = Livewire::test(ManageSolarGenerations::class)
             ->callAction('importarProducaoDiaria', ['consumer_unit_id' => $generator->id, 'file' => $this->upload('2026-11-07', '2026-11-16')])
@@ -106,7 +106,7 @@ class SolarProductionImportTest extends TestCase
     public function test_review_can_be_declined_and_stays_available(): void
     {
         $generator = $this->importGeneratorInvoice();
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->administrator()->create());
 
         Livewire::test(ManageSolarGenerations::class)
             ->callAction('importarProducaoDiaria', ['consumer_unit_id' => $generator->id, 'file' => $this->upload('2026-11-07', '2026-11-16')])
@@ -120,7 +120,7 @@ class SolarProductionImportTest extends TestCase
     public function test_dismissed_pending_disappears_until_the_data_changes(): void
     {
         $generator = $this->importGeneratorInvoice();
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->administrator()->create());
 
         Livewire::test(ManageSolarGenerations::class)
             ->callAction('importarProducaoDiaria', ['consumer_unit_id' => $generator->id, 'file' => $this->upload('2026-11-07', '2026-11-16')])
@@ -143,7 +143,7 @@ class SolarProductionImportTest extends TestCase
     public function test_divergent_manual_value_is_kept_unless_replaced_in_review(): void
     {
         $generator = $this->importGeneratorInvoice();
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->administrator()->create());
 
         Livewire::test(ManageSolarGenerations::class)
             ->callAction('create', ['consumer_unit_id' => $generator->id, 'reference_month' => '2026-11-01', 'generated_kwh' => 999]);
@@ -164,7 +164,7 @@ class SolarProductionImportTest extends TestCase
     public function test_manual_value_equal_to_spreadsheet_needs_no_review(): void
     {
         $generator = $this->importGeneratorInvoice();
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->administrator()->create());
 
         Livewire::test(ManageSolarGenerations::class)
             ->callAction('create', ['consumer_unit_id' => $generator->id, 'reference_month' => '2026-11-01', 'generated_kwh' => 310]);
@@ -179,7 +179,7 @@ class SolarProductionImportTest extends TestCase
     public function test_reimport_updates_spreadsheet_rows_automatically(): void
     {
         $generator = $this->importGeneratorInvoice();
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->administrator()->create());
 
         foreach ([10, 20] as $kwh) {
             Livewire::test(ManageSolarGenerations::class)

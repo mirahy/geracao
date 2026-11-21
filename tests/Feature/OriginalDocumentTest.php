@@ -48,7 +48,7 @@ class OriginalDocumentTest extends TestCase
 
         $this->get($url)->assertRedirect(); // sem login
 
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->administrator()->create());
         $response = $this->get($url)->assertOk()->assertHeader('Content-Type', 'application/pdf');
         $this->assertSame('%PDF-1.4 conteudo da fatura', $response->streamedContent());
     }
@@ -58,7 +58,7 @@ class OriginalDocumentTest extends TestCase
         Storage::fake('local');
         $this->importPdf('fatura_geradora_2026_11.txt', '%PDF-1.4 a');
         $this->importPdf('demonstrativo_2026_11.txt', '%PDF-1.4 b');
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->administrator()->create());
 
         Livewire::test(ListInvoices::class)
             ->assertTableActionVisible('verOriginal', Invoice::first());
@@ -72,7 +72,7 @@ class OriginalDocumentTest extends TestCase
         Storage::fake('local');
         $this->importPdf('demonstrativo_2026_11.txt', '%PDF-1.4 b');
         $this->importPdf('demonstrativo_beneficiaria_2026_11.txt', '%PDF-1.4 c');
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->administrator()->create());
 
         $beneficiary = ConsumerUnit::where('uc_number', '166533905167')->first();
         $statements = EnergyStatement::all();
