@@ -5,6 +5,7 @@ namespace App\Services\Solar;
 use App\Models\ConsumerUnit;
 use App\Models\SolarDailyProduction;
 use App\Models\SolarGeneration;
+use App\Models\SolarProductionDismissal;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
@@ -48,8 +49,39 @@ class SolarGenerationConsolidator
     public function pending(ConsumerUnit $unit): Collection
     {
         return $this->periods($unit)
-            ->filter(fn (array $p) => ! $this->isSettled($p) && ! $this->canAutoSave($p))
+            ->filter(fn (array $p) => ! $this->isSettled($p) && ! $this->canAutoSave($p) && ! $this->isDismissed($unit, $p))
             ->values();
+    }
+
+    /**
+     * Descarta as pendências dos meses informados (Y-m). Reaparecem se a soma ou os dias mudarem.
+     *
+     * @param  array<int, string>  $months
+     */
+    public function dismiss(ConsumerUnit $unit, array $months): int
+    {
+        $count = 0;
+        foreach ($this->pending($unit) as $period) {
+            if (in_array(substr($period['month'], 0, 7), $months, true)) {
+                SolarProductionDismissal::updateOrCreate(
+                    ['consumer_unit_id' => $unit->id, 'reference_month' => $period['month']],
+                    ['generated_kwh' => $period['kwh'], 'days' => $period['days']],
+                );
+                $count++;
+            }
+        }
+
+        return $count;
+    }
+
+    private function isDismissed(ConsumerUnit $unit, array $period): bool
+    {
+        $dismissal = SolarProductionDismissal::where('consumer_unit_id', $unit->id)
+            ->whereDate('reference_month', $period['month'])->first();
+
+        return $dismissal !== null
+            && $dismissal->days === $period['days']
+            && abs($dismissal->generated_kwh - $period['kwh']) <= self::TOLERANCE;
     }
 
     /**

@@ -95,7 +95,7 @@ class SolarProductionImportTest extends TestCase
 
         $this->assertSame(0, SolarGeneration::count());
 
-        $page->setActionData(['m_202611' => true])->callMountedAction();
+        $page->setActionData(['m_202611' => 'save'])->callMountedAction();
 
         $generation = SolarGeneration::sole();
         $this->assertSame(100.0, $generation->generated_kwh); // 10 dias × 10 kWh
@@ -110,11 +110,34 @@ class SolarProductionImportTest extends TestCase
 
         Livewire::test(ManageSolarGenerations::class)
             ->callAction('importarProducaoDiaria', ['consumer_unit_id' => $generator->id, 'file' => $this->upload('2026-11-07', '2026-11-16')])
-            ->setActionData(['m_202611' => false])->callMountedAction();
+            ->setActionData(['m_202611' => 'later'])->callMountedAction();
 
         $this->assertSame(0, SolarGeneration::count());
 
         Livewire::test(ManageSolarGenerations::class)->assertActionVisible('revisarProducaoDiaria');
+    }
+
+    public function test_dismissed_pending_disappears_until_the_data_changes(): void
+    {
+        $generator = $this->importGeneratorInvoice();
+        $this->actingAs(User::factory()->create());
+
+        Livewire::test(ManageSolarGenerations::class)
+            ->callAction('importarProducaoDiaria', ['consumer_unit_id' => $generator->id, 'file' => $this->upload('2026-11-07', '2026-11-16')])
+            ->setActionData(['m_202611' => 'dismiss'])->callMountedAction();
+
+        $this->assertSame(0, SolarGeneration::count());
+        Livewire::test(ManageSolarGenerations::class)->assertActionHidden('revisarProducaoDiaria');
+
+        // Mesma planilha de novo: continua descartada.
+        Livewire::test(ManageSolarGenerations::class)
+            ->callAction('importarProducaoDiaria', ['consumer_unit_id' => $generator->id, 'file' => $this->upload('2026-11-07', '2026-11-16')])
+            ->assertActionNotMounted('revisarProducaoDiaria');
+
+        // Planilha com mais dias: a pendência volta.
+        Livewire::test(ManageSolarGenerations::class)
+            ->callAction('importarProducaoDiaria', ['consumer_unit_id' => $generator->id, 'file' => $this->upload('2026-11-01', '2026-11-16')])
+            ->assertActionMounted('revisarProducaoDiaria');
     }
 
     public function test_divergent_manual_value_is_kept_unless_replaced_in_review(): void
@@ -132,7 +155,7 @@ class SolarProductionImportTest extends TestCase
         $this->assertSame(999.0, SolarGeneration::sole()->generated_kwh);
         $this->assertSame('manual', SolarGeneration::sole()->source);
 
-        $page->setActionData(['m_202611' => true])->callMountedAction();
+        $page->setActionData(['m_202611' => 'save'])->callMountedAction();
 
         $this->assertSame(310.0, SolarGeneration::sole()->generated_kwh);
         $this->assertSame('planilha', SolarGeneration::sole()->source);

@@ -5,7 +5,7 @@ namespace App\Filament\Actions;
 use App\Models\ConsumerUnit;
 use App\Services\Solar\SolarGenerationConsolidator;
 use Filament\Actions\Action;
-use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\Radio;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Section;
 use Filament\Support\Icons\Heroicon;
@@ -23,22 +23,28 @@ class ReviewSolarProductionAction
             ->badge(fn () => self::pending()->count() ?: null)
             ->visible(fn () => self::pending()->isNotEmpty())
             ->modalHeading('Revisar produção importada')
-            ->modalDescription('Estes meses não foram gravados automaticamente. Marque os que deseja gravar; os demais permanecem como estão.')
-            ->modalSubmitActionLabel('Gravar selecionados')
-            ->modalCancelActionLabel('Não gravar agora')
+            ->modalDescription('Estes meses não foram gravados automaticamente. Escolha para cada mês: gravar o valor da planilha, deixar para decidir depois ou descartar a pendência (ela só volta se uma nova planilha mudar os dados do mês).')
+            ->modalSubmitActionLabel('Aplicar')
+            ->modalCancelActionLabel('Fechar')
             ->schema(fn () => self::pending()->map(fn (array $item) => self::section($item))->all())
             ->action(function (array $data): void {
                 $consolidator = app(SolarGenerationConsolidator::class);
-                $saved = 0;
+                $monthsWith = fn (string $choice) => collect($data)->filter(fn ($value) => $value === $choice)->keys()
+                    ->map(fn ($key) => preg_replace('/^m_(\d{4})(\d{2})$/', '$1-$2', $key))->all();
+                $saved = $dismissed = 0;
 
                 foreach (self::generators() as $unit) {
-                    $months = collect($data)->filter()->keys()
-                        ->map(fn ($key) => preg_replace('/^m_(\d{4})(\d{2})$/', '$1-$2', $key))->all();
-                    $saved += $consolidator->apply($unit, $months);
+                    $saved += $consolidator->apply($unit, $monthsWith('save'));
+                    $dismissed += $consolidator->dismiss($unit, $monthsWith('dismiss'));
                 }
 
                 Notification::make()
-                    ->title($saved ? "{$saved} mês(es) gravado(s)" : 'Nada foi gravado')
+                    ->title('Revisão concluída')
+                    ->body(collect([
+                        $saved ? "{$saved} mês(es) gravado(s)." : null,
+                        $dismissed ? "{$dismissed} pendência(s) descartada(s)." : null,
+                        ! $saved && ! $dismissed ? 'Nada foi alterado.' : null,
+                    ])->filter()->implode(' '))
                     ->success()
                     ->send();
             });
@@ -86,9 +92,14 @@ class ReviewSolarProductionAction
         return Section::make(self::title($item))
             ->description(implode(' ', $lines))
             ->schema([
-                Toggle::make('m_'.str_replace('-', '', substr($item['month'], 0, 7)))
-                    ->label($action)
-                    ->default(false),
+                Radio::make('m_'.str_replace('-', '', substr($item['month'], 0, 7)))
+                    ->hiddenLabel()
+                    ->options([
+                        'later' => 'Decidir depois (manter como está)',
+                        'save' => $action,
+                        'dismiss' => 'Descartar esta pendência',
+                    ])
+                    ->default('later'),
             ])
             ->compact();
     }
