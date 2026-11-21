@@ -74,7 +74,7 @@ class InvoiceResource extends Resource
                 TextEntry::make('compensation_credit_amount')->label('Crédito da energia injetada')->formatStateUsing($brl),
                 TextEntry::make('compensation_fee_amount')->label('Ajuste GD II (Lei 14.300)')->formatStateUsing($brl),
                 TextEntry::make('cip_amount')->label('Iluminação pública (CIP)')->formatStateUsing($brl),
-                TextEntry::make('other_charges_amount')->label('Multa/juros/atualização')->formatStateUsing($brl),
+                TextEntry::make('other_charges_amount')->label('Multa/juros/ atualização')->formatStateUsing($brl),
                 TextEntry::make('savings')->label('Economia líquida')->formatStateUsing($brl)->color('success')->weight('bold'),
                 TextEntry::make('amount_without_solar')->label('Sem compensação seria')->formatStateUsing($brl),
             ]),
