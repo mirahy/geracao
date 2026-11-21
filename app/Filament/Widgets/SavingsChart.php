@@ -12,9 +12,9 @@ class SavingsChart extends ChartWidget
 
     protected static ?int $sort = 6;
 
-    protected ?string $heading = 'Custo com x sem compensação (R$)';
+    protected ?string $heading = 'Custo com x sem energia solar (R$)';
 
-    protected ?string $description = 'Sem compensação = fatura + economia obtida com os créditos.';
+    protected ?string $description = 'Sem solar = fatura + economia da compensação + economia do autoconsumo (kWh × tarifa).';
 
     protected ?string $maxHeight = '320px';
 
@@ -27,11 +27,13 @@ class SavingsChart extends ChartWidget
     {
         $e = $this->energy();
         $s = $e->savingsSeries();
+        $selfAmount = $e->selfConsumptionSeries()['amount'];
+        $s['without'] = array_map(fn ($v, $i) => round($v + $selfAmount[$i], 2), $s['without'], array_keys($s['without']));
 
         return [
             'labels' => $e->labels(),
             'datasets' => [
-                ['label' => 'Sem compensação', 'data' => $s['without'], 'backgroundColor' => '#fca5a5', 'borderRadius' => 4],
+                ['label' => 'Sem solar', 'data' => $s['without'], 'backgroundColor' => '#fca5a5', 'borderRadius' => 4],
                 ['label' => 'Com compensação (fatura)', 'data' => $s['with'], 'backgroundColor' => '#10b981', 'borderRadius' => 4],
             ],
         ];

@@ -36,7 +36,9 @@ class UnitsSummaryTable extends TableWidget
                     ->formatStateUsing(fn ($state) => $state === 'generator' ? 'Geradora' : 'Beneficiária')
                     ->color(fn ($state) => $state === 'generator' ? 'warning' : 'info'),
                 TextColumn::make('generated')->label('Geração (kWh)')->alignEnd()->state($kwh('generated')),
-                TextColumn::make('consumption')->label('Consumo (kWh)')->alignEnd()->state($kwh('consumption')),
+                TextColumn::make('self_consumed')->label('Autoconsumo (kWh)')->alignEnd()->state($kwh('self_consumed')),
+                TextColumn::make('consumption')->label('Consumo da rede (kWh)')->alignEnd()->state($kwh('consumption')),
+                TextColumn::make('total_consumption')->label('Consumo total (kWh)')->alignEnd()->state($kwh('total_consumption')),
                 TextColumn::make('compensated')->label('Compensado (kWh)')->alignEnd()->state($kwh('compensated')),
                 TextColumn::make('sent')->label('Transferido (kWh)')->alignEnd()->state($kwh('sent')),
                 TextColumn::make('received')->label('Recebido (kWh)')->alignEnd()->state($kwh('received')),

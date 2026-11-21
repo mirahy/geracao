@@ -25,6 +25,9 @@ class EnergyStatsOverview extends StatsOverviewWidget
             Stat::make('Geração das placas', $kwh($t['generated']))
                 ->description($t['generated'] > 0 ? 'informada manualmente' : 'cadastre a geração mensal')
                 ->icon(Heroicon::OutlinedSun)->color('warning'),
+            Stat::make('Autoconsumo das placas', $kwh($t['self_consumed']))
+                ->description('gasto direto da placa, antes de injetar (geração − injetado)')
+                ->icon(Heroicon::OutlinedHome)->color('primary'),
             Stat::make('Injetado na rede', $kwh($t['injected']))
                 ->description('energia enviada à distribuidora')
                 ->icon(Heroicon::OutlinedArrowUpCircle)->color('success'),
@@ -32,13 +35,13 @@ class EnergyStatsOverview extends StatsOverviewWidget
                 ->description('créditos distribuídos')
                 ->icon(Heroicon::OutlinedArrowsRightLeft)->color('info'),
             Stat::make('Consumo da rede', $kwh($t['consumption']))
-                ->description('medido nas UCs')
+                ->description('consumo total (rede + autoconsumo): '.$kwh($t['total_consumption']))
                 ->icon(Heroicon::OutlinedBolt)->color('gray'),
             Stat::make('Custo das faturas', $brl($t['cost']))
                 ->description('total faturado no período')
                 ->icon(Heroicon::OutlinedBanknotes)->color('danger'),
-            Stat::make('Economia com compensação', $brl($t['savings']))
-                ->description('crédito compensado − ajuste Lei 14.300')
+            Stat::make('Economia total', $brl($t['total_savings']))
+                ->description('compensação '.$brl($t['savings']).' + autoconsumo '.$brl($t['self_savings']))
                 ->icon(Heroicon::OutlinedCurrencyDollar)->color('success'),
             Stat::make('Saldo de créditos', $kwh($t['balance']))
                 ->description('somatório do último saldo de cada UC')

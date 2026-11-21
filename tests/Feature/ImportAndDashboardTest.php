@@ -98,6 +98,11 @@ class ImportAndDashboardTest extends TestCase
         $this->assertEqualsWithDelta(306.29, $totals['cost'], 0.001);
         $this->assertSame(1117.0, $totals['balance']); // 737 + 56 + 324
 
+        // autoconsumo 1300 - 911 = 389 kWh, valorizado pela tarifa da fatura (1,30983)
+        $this->assertSame(389.0, $totals['self_consumed']);
+        $this->assertEqualsWithDelta(389 * 1.30983, $totals['self_savings'], 0.01);
+        $this->assertSame(1257.0 + 389.0, $totals['total_consumption']); // rede (805 + 162 + 290) + autoconsumo
+
         $only = EnergyDashboard::make($generator->id, '2026-08', '2026-11')->totals();
         $this->assertEqualsWithDelta(110.56, $only['cost'], 0.001);
     }

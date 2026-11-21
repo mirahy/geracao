@@ -125,6 +125,31 @@ class EnergyDashboard
         return $result;
     }
 
+    /** Tarifa (R$/kWh) do mês: da fatura da UC geradora; senão a última conhecida; senão o padrão. */
+    private function tariffFor(string $month): float
+    {
+        $invoices = $this->invoices()->filter(fn ($i) => $i->tariff_per_kwh)->sortBy('reference_month');
+        $exact = $invoices->first(fn ($i) => $i->reference_month->format('Y-m') === $month);
+
+        return (float) ($exact?->tariff_per_kwh ?? $invoices->last()?->tariff_per_kwh ?? config('geracao.default_tariff'));
+    }
+
+    /**
+     * Autoconsumo (geração consumida direto da placa, sem passar pela rede) valorizado pela tarifa.
+     *
+     * @return array{kwh: list<?float>, amount: list<float>}
+     */
+    public function selfConsumptionSeries(): array
+    {
+        $self = $this->generationSeries()['self_consumed'];
+        $amount = [];
+        foreach ($this->months() as $i => $month) {
+            $amount[] = round(($self[$i] ?? 0) * $this->tariffFor($month), 2);
+        }
+
+        return ['kwh' => $self, 'amount' => $amount];
+    }
+
     /**
      * Consumo da rede (kWh) por UC e mês. Usa o histórico do demonstrativo (UC geradora)
      * e, na falta dele, o consumo faturado.
@@ -236,7 +261,16 @@ class EnergyDashboard
             fn ($unit) => $this->invoices()->where('consumer_unit_id', $unit->id)->sortByDesc('reference_month')->first()?->credit_balance_kwh ?? 0
         );
 
+        $selfKwh = (float) array_sum(array_filter($gen['self_consumed'], fn ($v) => $v !== null));
+        $selfAmount = (float) array_sum($this->selfConsumptionSeries()['amount']);
+        $gridConsumption = (float) array_sum(array_map(fn ($v) => array_sum(array_filter($v, fn ($x) => $x !== null)), $this->consumptionSeries()));
+        $compSavings = (float) $this->invoices()->sum(fn ($i) => $i->savings);
+
         return [
+            'self_consumed' => $selfKwh,
+            'self_savings' => round($selfAmount, 2),
+            'total_consumption' => $gridConsumption + $selfKwh,
+            'total_savings' => round($compSavings + $selfAmount, 2),
             'generated' => (float) $generated,
             'injected' => (float) array_sum(array_filter($gen['injected'], fn ($v) => $v !== null)),
             'transferred' => (float) $this->transfers()->sum('kwh'),
@@ -261,8 +295,19 @@ class EnergyDashboard
             $consumption = $histories->isNotEmpty() ? $histories->sum('measured_kwh') : $invoices->sum('consumption_kwh');
             $latestInvoice = $invoices->sortByDesc('reference_month')->first();
 
+            $generated = (float) $this->generations()->where('consumer_unit_id', $unit->id)->sum('generated_kwh');
+            $injected = (float) $histories->sum('injected_kwh');
+            // autoconsumo só conta nos meses com geração informada
+            $self = $this->generations()->where('consumer_unit_id', $unit->id)->sum(function ($g) use ($histories) {
+                $h = $histories->first(fn ($x) => $x->reference_month->format('Y-m') === $g->reference_month->format('Y-m'));
+
+                return $h ? max($g->generated_kwh - $h->injected_kwh, 0) : 0;
+            });
+
             return [
                 'unit' => $unit,
+                'self_consumed' => (float) $self,
+                'total_consumption' => (float) $consumption + (float) $self,
                 'generated' => (float) $this->generations()->where('consumer_unit_id', $unit->id)->sum('generated_kwh'),
                 'consumption' => (float) $consumption,
                 'compensated' => (float) $invoices->sum('compensated_kwh'),
