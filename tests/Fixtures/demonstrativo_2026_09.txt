@@ -1,0 +1,73 @@
+                       ENERGISA MATO GROSSO DO SUL - DISTRIBUIDORA DE
+                       ENERGIA S/A
+                       www.energisa.com.br | 0800 6464 196 - CENTRAL DE ATENDIMENTO
+TITULAR EXEMPLO                                                 | Número da UC: 917.358.051-98
+DA SILVA                                                 RUA DAS FLORES, 65, 02.038.07.029003
+
+
+
+Referência: 09/2026
+
+   Demonstrativo de Compensação de Energia Injetada
+                                                      Consumo Convencional
+     Ano Mês       Med. KWh           Irr.                 Injetado             Injet. Comp.          Sobra                  Bruto
+     2026 09       226                0                    766                  221                   545                    226
+     2026 08       173                0                    835                  155                   680                    173
+     2026 07       231                0                    54                   54                    0                      231
+     2026 06       207                0                    0                    0                     0                      207
+     2026 05       371                0                    0                    0                     0                      371
+     2026 04       562                0                    0                    0                     0                      562
+     2026 03       340                0                    0                    0                     0                      340
+     2026 02       222                0                    0                    0                     0                      222
+     2026 01       451                0                    0                    0                     0                      451
+     2025 12       326                0                    0                    0                     0                      326
+     2025 11       264                0                    0                    0                     0                      264
+     2025 10       258                0                    0                    0                     0                      258
+     2025 09       224                0                    0                    0                     0                      224
+
+
+                                       Movimentações do Mês 09/2026                                               Expiração
+            Saldo         Injetado    Recebido    Compensado Transferido
+     Posto                                                               Expirado (-) Disponível                         Consumo Ciclo
+            Anterior      (+)         (+)         (-)        (-)
+     Conv
+     GD I   0             0           0           0                   0              0                 0                 0            09/2031
+     GD II 449            766         0           221                 381            0                 613               164
+     GD III 0             0           0           0                   0              0                 0                 0
+     Pt
+     GD I   0             0           0           0                   0              0                 0                 0
+     GD II 0              0           0           0                   0              0                 0                 0
+     GD III 0             0           0           0                   0              0                 0                 0
+     FPt
+     GD I   0             0           0           0                   0              0                 0                 0
+     GD II 0              0           0           0                   0              0                 0                 0
+     GD III 0             0           0           0                   0              0                 0                 0
+     Itmdr
+     GD I   0             0           0           0                   0              0                 0                 0
+     GD II 0              0           0           0                   0              0                 0                 0
+     GD III 0             0           0           0                   0              0                 0                 0
+
+
+                                Discriminação das Transferências do Mês 09 de 2026
+                                                                                     Fora
+     %      UC Comp.                 Conv                   Ponta                                                Interm.             Ciclo
+                                                                                     Ponta
+                              GD I   GD II   GD III GD I    GD II     GD III GD I    GD II        GD III GD I    GD II         GD III
+     30     31085605152       0      -163    0      0       0         0      0       0            0      0       0             0      09/2026
+     40     25953005179       0      -218    0      0       0         0      0       0            0      0       0             0      09/2026
+            TOTAL             0      -381    0      0       0         0      0       0            0      0       0             0
+
+
+                                       Composição e Utilização do Saldo Anterior
+                                      Saldo
+     Ano     Mês    Posto                                           Comp/Ajustado                            Disponível              Expiração
+                                     Anterior
+                                GD I  GD II GD III          GD I            GD II        GD III     GD I         GD II       GD III
+     2026    08     Conv        0.00 449.00 0.00            0.00            0.00         0.00       0.00        449.00       0.00 08/2031
+                            Saldo
+Ano   Mês   Posto                                   Comp/Ajustado                 Disponível          Expiração
+                           Anterior
+            Pt      0.00     0.00     0.00   0.00       0.00        0.00   0.00      0.00      0.00
+            FPt     0.00     0.00     0.00   0.00       0.00        0.00   0.00      0.00      0.00
+            Itmdr   0.00     0.00     0.00   0.00       0.00        0.00   0.00      0.00      0.00
+

@@ -1,0 +1,187 @@
+                                                      DANF3E - DOCUMENTO AUXILIAR DA NOTA FISCAL DE ENERGIA ELÉTRICA ELETRÔNICA
+                                                      ENERGISA MATO GROSSO DO SUL - DISTR. DE ENERGIA S.A.
+                                                      Av. Gury Marques, 8000
+                                                      Campo Grande/MS - CEP 79072-900
+                                                      CNPJ 15.413.826/0001-50 Insc. Est. 28.105.553-0
+
+
+
+
+                                                                                                                                                                                  Data de Apresentação:19/11/2026
+         DOM. BANC.:                                               DOM. ENT.:
+
+
+         Classificação: MTC-CONVENCIONAL BAIXA TENSÃO / B1
+         RESIDENCIAL / RESIDENCIAL                                                 LIGAÇÃO: BIFASICO
+
+
+         TENSÃO NOMINAL EM VOLTS          DISP:                      Lim. Min.:                     Lim. Max.:
+
+
+         TITULAR EXEMPLO DA SILVA                                                                                                                             07/10/2026              17/11/2026                       41            17/12/2026
+
+         AVE DAS ACACIAS, 1888 - 17.102.23.021535 BL 01 APTO 311 -
+         79041080
+                                                                                                                                                                                             NOTA FISCAL Nº: 020.172.083 - Série: 002
+         JARDIM SAO LOURENCO                                                                        1.665.339.051-67
+         CAMPO GRANDE (AG: 102)                                                                                                                                                              DATA DE EMISSÃO:18/11/2026
+                                                                                                                                                                                             Consulte pela Chave de Acesso em:
+         CNPJ/CPF/RANI: 02X.XXX.XX1-74
+                                                                                                                                                                                             https://www.dfe.ms.gov.br/nf3e/consulta
+         Insc. Est.:
+                                                                                                                                                                                             chave de acesso:
+                                                                                                                                                                                             5026 1115 4138 2600 0150 6600 2020 1720 8310 6540
+                                                                                                                                                                                             3886
+                                                                                                                                                                                             Protocolo de Autorização:
+                  Novembro / 2026                          27/11/2026                               R$ 112,27                                                                                1502600014678802 - 18/11/2026 23:26:43
+
+
+
+
+     - Contrato de Adesão junto à fatura. - Conheça seus direitos e deveres. Acesse: www.energisa.com.br/direitos-e-deveres
+
+
+
+
+                                                                                    Preço unit (R$)                         PIS/             Base Calc. % Alíq.            ICMS           Tarifa       Tributo          Base de         Alíquota   Valor
+Itens da Fatura                                            Unid.                      com tributos        Valor (R$) COFINS (R$)              ICMS (R$) ICMS                (R$)       Unit (R$)                        Cálc.(R$)          (%)      (R$)
+                                                                        Quant.
+                                                                                                                                                                                                      PIS                        0,00   1,6500      0,00
+Consumo em kWh                                         KWH               290,00         1,309830             379,85           29,16              379,85      17            64,57       0,986600
+                                                                                                                                                                                                      COFINS                     0,00   7,6000      0,00
+Energia Atv Injetada GDII oUC 11/2026 mPT              KWH               290,00         1,309830             -379,85         -29,16             -379,85      17           -64,57       0,986600
+                                                                                                                                                                                                      ICMS                       0,00    17,00      0,00
+Ajuste GDII - TRF Reduzida(Lei 14.300/22) - Conv.      KWH               290,00         0,207670                 60,22            0,00                0,00   0              0,00       0,207673
+LANÇAMENTOS E SERVIÇOS
+CONT.IL.PUB-CIP MUNICIPAL                                                                                        52,05            0,00                0,00   0              0,00
+                                                                                                                                                                                                                                                   Nº DIAS
+                                                                                                                                                                                                                    CONSUMO FATURADO
+                                                                                                                                                                                                                                                       FAT
+                                                                                                                                                                                                                   NOV/26                              41
+                                                                                                                                                                                                                   OUT/26
+                                                                                                                                                                                                                   SET/26
+                                                                                                                                                                                                                   AGO/26
+                                                                                                                                                                                                     Consumo kWh
+                                                                                                                                                                                                                   JUL/26
+                                                                                                                                                                                                                   JUN/26
+                                                                                                                                                                                                                   MAI/26
+                                                                                                                                                                                                                   ABR/26
+                                                                                                                                                                                                                   MAR/26
+                                                                                                                                                                                                                   FEV/26
+                                                                                                                                                                                                                   JAN/26
+                                                                                                                                                                                                                   DEZ/25
+                                                                                                                                                                                                                   NOV/25
+
+
+
+
+                                                                     TOTAL:                                  112,27               0,00                0,00                  0,00
+
+
+
+
+    00053001899          Energia ativa em kWh        Ponta                51237            51527                  1           290              Art. 41, Inciso V, alínea a do RICMS/MS - 1998
+
+
+
+
+                                CADASTRE SUA FATURA EM DÉBITO AUTOMÁTICO UTILIZANDO O CÓDIGO: 0003911106-7
+                                    Esta NOTA FISCAL/CONTA DE ENERGIA fica disponível para pagamento a partir de 19/11/2026
+    BANCO ITAU SA                                                                  341 -7 34191.09594 08903.070277 52186.260007 1 16430000011227                                                                     Pague por
+    LOCAL DE PAGAMENTO                                                                                                                                               VENCIMENTO
+    PAGAR PREFERENCIALMENTE NO BANCO ITAU SA
+    BENEFICIÁRIO
+    ENERGISA MATO GROSSO DO SUL - DISTRIBUIDORA DE ENERGIA S/A
+     ENDEREÇO
+    AV GURY MARQUES, 8000 - SAIDA PARA S.PAULO - CAMPO GRANDE / MS - CEP 79072-900
+                                                                                                                                              15.413.826/0001-50
+                                                                                                                                                                     NOSSO NÚMERO
+                                                                                                                                                                                   27/11/2026
+                                                                                                                                                              CNPJ Ag/COD. BENEFICIÁRIO
+                                                                                                                                                                                  275/21862-6
+
+                                                                                                                                                                           109/59089030-7
+                                                                                                                                                                                                                     PIX
+                                                                                                                                                                                                    É fácil, rápido e seguro.
+    DATA DO DOCUMENTO               Nº DOCUMENTO                                               ESPÉCIE DOC               ACEITE          DATA DO PROCESSAMENTO       (=)VALOR DO DOCUMENTO
+    18/11/2026                      3911106-2026-11-7                                          DS                        N               18/11/2026                                     112,27
+                                                                                                                                                                     (-) DESCONTOS/
+                                                CARTEIRA   109                    ESPÉCIE R$           QUANTIDADE                             VALOR
+                                                                                                                                                                      ABATIMENTOS
+    INSTRUÇÕES                                                                                                                                                       (-) OUTRAS
+    OS VALORES DA MULTA/JUROS DE MORA POR ATRASO SÓ SERÃO COBRADOS                                                                                                    DEDUÇÕES
+                                                                                                                                                                     (+) MORA/
+    NA PRIMEIRA FATURA APÓS O PAGAMENTO DESTA.                                                                                                                        MULTA
+    TITULO SUJEITO A PROTESTO APÓS O VENCIMENTO.                                                                                                                     (+) OUTROS
+                                                                                                                                                                     ACRÉSCIMOS
+    NÃO ACEITAMOS DEPÓSITO EM CONTA CORRENTE. CASO OCORRA, O MESMO NÃO QUITARÁ ESTA FATURA.
+                                                                                                                                                                     (=) VALOR
+                                                                                                                                                                     COBRADO
+
+    PAGADOR                                                                                                                                                                            CPF/CNPJ
+    TITULAR EXEMPLO DA SILVA                                                                                                                                          024.576.801-74
+    AVE DAS ACACIAS, 1888 - 17.102.23.021535 BL 01 APTO 311                                CAMPO GRANDE (AG: 102)
+    SACADOR/ AVALISTA                                                                                                                                                              CÓD. DE BAIXA
+                                                                                                                                                                  AUTENTICAÇÃO MECÂNICA
+
+
+
+
+   (UrSgWdFrUuB{B{WdGdIlDmTeJmE{UuA|EhTbWgHbFuB{)
+                                                                                                                                                                                                   Receba sua conta só com o PIX
+                                                                                                                                                                                                   Cadastre-se em nossos canais
+                                                                                                                                                              Ficha de Compensação
+        .
+        UC de compensação de energia classificada como GD_II, conforme Lei 14.300/22
+        Saldo Acumulado: 324 A expirar no próximo ciclo: 0
+        -O vencimento desta fatura foi prorrogado devido sua opção de vencimento especial.
+        - -Violência contra a mulher é crime. Não se cale. Denuncie. Ligue 180.
+        - Doe sangue! Instituto Sangue Bom pela vida.
+        - -Participe da Coleta Seletiva: www.solurb.eco.br/servico/coleta-seletiva/18
+        - Leitura confirmada
+
+
+
+
+    DIC             0,00      0,00   0,00    0,00 NOV/26           290,00
+    FIC             0,00      0,00   0,00    0,00 OUT/26
+    DMIC            7,00      0,00                SET/26
+    DICRI           0,00                          AGO/26
+                                                  JUL/26
+    Conjunto:                                     JUN/26
+                                                  MAI/26
+    Referência:                         09/2026   ABR/26
+    Tensão Contratada:                               MAR/26
+    Limite Adequado:                           a     FEV/26
+                                                     JAN/26
+                                                     DEZ/25
+                                                     NOV/25
+
+
+
+                                                                 *FATURAMENTO PELA MÉDIA/MÍNIMO
+
+
+                                                                                             Leitura Anterior: 07/10/2026      Leitura Atual: 17/11/2026   Dias: 41
+
+
+
+Serviço de distribuição                      20,57     18,32   KWH       Ponta               51.527,00      51.237,00       1,00                                                   290,00            290,00
+Compra de energia                            22,73     20,25
+Serviço de transmissão                        3,94      3,51
+Encargos setoriais                           12,98     11,56
+Impostos diretos e encargos                  52,05     46,36
+Outros serviços                               0,00      0,00
+Total                                       112,27    100,00
+
+
+
+
+                                                                                                                                                                      * KWTG: Dem Tusdg * K: Const Med
+
+
+
+
+                                                                                                                                                                             Roteiro: 011 - 0102 - 110 - 1941
+                                                                                                                                                                                      Medidor: 00053001899
+
