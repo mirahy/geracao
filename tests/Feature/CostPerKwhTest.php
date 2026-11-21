@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Filament\Resources\ConsumerUnits\Pages\EditConsumerUnit;
+use App\Filament\Widgets\EnergyStatsOverview;
 use App\Models\ConsumerUnit;
 use App\Models\Invoice;
 use App\Models\SolarGeneration;
@@ -61,6 +62,22 @@ class CostPerKwhTest extends TestCase
         $invoice = Invoice::where('consumer_unit_id', $receiver->id)->first();
         $this->assertSame((float) $invoice->consumption_kwh, $result['kwh']);
         $this->assertEqualsWithDelta(((float) $invoice->total_amount + $result['parts']['Rateio das placas']) / $invoice->consumption_kwh, $result['rate'], 0.0001);
+    }
+
+    public function test_solar_cost_card_follows_the_period_and_is_hidden_for_receivers(): void
+    {
+        [$generator, $receiver] = $this->setUpData();
+        $this->actingAs(User::factory()->create());
+        SolarGeneration::create(['consumer_unit_id' => $generator->id, 'reference_month' => '2026-10-01', 'generated_kwh' => 500]);
+        SolarInstallment::create(['consumer_unit_id' => $generator->id, 'amount' => 100, 'start_month' => '2026-10-01', 'end_month' => '2026-10-01']);
+
+        // Nov: 500 ÷ 1000; Out: 100 ÷ 500; período Out–Nov: 600 ÷ 1500.
+        $this->assertEqualsWithDelta(0.5, EnergyDashboard::make(null, '2026-11', '2026-11')->totals()['solar_cost_per_kwh'], 0.0001);
+        $this->assertEqualsWithDelta(0.2, EnergyDashboard::make(null, '2026-10', '2026-10')->totals()['solar_cost_per_kwh'], 0.0001);
+        $this->assertEqualsWithDelta(0.4, EnergyDashboard::make($generator->id, '2026-10', '2026-11')->totals()['solar_cost_per_kwh'], 0.0001);
+
+        Livewire::test(EnergyStatsOverview::class, ['pageFilters' => ['unit_id' => $generator->id]])->assertSee('Custo do kWh das placas');
+        Livewire::test(EnergyStatsOverview::class, ['record' => $receiver])->assertDontSee('Custo do kWh das placas');
     }
 
     public function test_rate_is_null_without_kwh(): void

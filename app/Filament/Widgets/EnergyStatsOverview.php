@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Filament\Widgets\Concerns\UsesEnergyDashboard;
+use App\Models\ConsumerUnit;
 use Filament\Support\Icons\Heroicon;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -29,8 +30,17 @@ class EnergyStatsOverview extends StatsOverviewWidget
                 ->icon(Heroicon::OutlinedCalculator)->color('warning'),
         ];
 
+        $isReceiverScope = $this->energy()->units()->count() === 1
+            && $this->energy()->units()->first()->role === ConsumerUnit::ROLE_RECEIVER;
+        $solarCostStat = $isReceiverScope ? [] : [
+            Stat::make('Custo do kWh das placas', $t['solar_cost_per_kwh'] !== null ? 'R$ '.number_format($t['solar_cost_per_kwh'], 4, ',', '.') : '—')
+                ->description('parcelas ÷ geração dos meses do período filtrado')
+                ->icon(Heroicon::OutlinedCalculator)->color('gray'),
+        ];
+
         return [
             ...$unitCostStat,
+            ...$solarCostStat,
             Stat::make('Geração das placas', $kwh($t['generated']))
                 ->description($t['generated'] > 0 ? 'informada manualmente' : 'cadastre a geração mensal')
                 ->icon(Heroicon::OutlinedSun)->color('warning'),
@@ -52,9 +62,6 @@ class EnergyStatsOverview extends StatsOverviewWidget
             Stat::make('Economia total', $brl($t['total_savings']))
                 ->description('compensação '.$brl($t['savings']).' + autoconsumo '.$brl($t['self_savings']))
                 ->icon(Heroicon::OutlinedCurrencyDollar)->color('success'),
-            Stat::make('Custo do kWh das placas', $t['solar_cost_per_kwh'] !== null ? 'R$ '.number_format($t['solar_cost_per_kwh'], 4, ',', '.') : '—')
-                ->description('parcela ÷ geração do mês (último mês com geração)')
-                ->icon(Heroicon::OutlinedCalculator)->color('gray'),
             Stat::make('Rateio cobrado das beneficiárias', $brl($t['share_charged']))
                 ->description('abatido da parcela da UC geradora: '.$brl($t['share_abated']))
                 ->icon(Heroicon::OutlinedReceiptPercent)->color('info'),

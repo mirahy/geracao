@@ -276,6 +276,28 @@ class EnergyDashboard
     }
 
     /**
+     * Custo do kWh das placas no período filtrado: parcelas dos meses ÷ geração desses meses
+     * (só meses com geração e parcela). Considera todas as UCs geradoras, como solarRates().
+     */
+    public function solarCostPerKwh(): ?float
+    {
+        $generated = SolarGeneration::all()
+            ->groupBy(fn ($g) => $g->reference_month->format('Y-m'))
+            ->map(fn ($rows) => (float) $rows->sum('generated_kwh'));
+
+        $amount = $kwh = 0.0;
+        foreach ($this->months() as $month) {
+            $monthAmount = (float) $this->installments()->filter(fn ($i) => $i->coversMonth($month))->sum('amount');
+            if (($generated[$month] ?? 0) > 0 && $monthAmount > 0) {
+                $amount += $monthAmount;
+                $kwh += $generated[$month];
+            }
+        }
+
+        return $kwh > 0 ? $amount / $kwh : null;
+    }
+
+    /**
      * Rateio: no mês seguinte à transferência, cada UC beneficiária paga
      * kWh recebido × custo do kWh das placas (do mês da transferência).
      * UCs com "bills_solar_cost" desligado (ex.: Campo Grande) ficam de fora.
@@ -442,7 +464,7 @@ class EnergyDashboard
             'installments_gross' => round(array_sum($this->grossInstallmentSeries()), 2),
             'share_abated' => round(array_sum($this->abatedSeries()), 2),
             'share_charged' => round(array_sum($this->chargedSeries()), 2),
-            'solar_cost_per_kwh' => ($rates = $this->solarRates()) ? $rates[array_key_last($rates)] : null,
+            'solar_cost_per_kwh' => $this->solarCostPerKwh(),
             'total_cost' => round((float) $this->invoices()->sum('total_amount') + $installments, 2),
             'net_result' => round($totalSavings - $installments, 2),
             'self_consumed' => $selfKwh,
