@@ -8,6 +8,7 @@ use App\Models\EnergyHistory;
 use App\Models\EnergyStatement;
 use App\Models\ImportedDocument;
 use App\Models\Invoice;
+use App\Services\Solar\SolarGenerationConsolidator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -177,6 +178,9 @@ class DocumentImporter
         foreach ($data['items'] as $item) {
             $invoice->items()->create($item);
         }
+
+        // Se já há produção diária importada, fecha o mês com o período de leitura desta fatura.
+        app(SolarGenerationConsolidator::class)->consolidate($unit);
 
         return $unit;
     }

@@ -4,16 +4,17 @@ namespace App\Filament\Resources\SolarGenerations;
 
 use App\Filament\Resources\SolarGenerations\Pages\ManageSolarGenerations;
 use App\Models\ConsumerUnit;
+use App\Models\EnergyHistory;
 use App\Models\SolarGeneration;
 use App\Support\MonthOptions;
 use BackedEnum;
-use Filament\Actions\CreateAction;
+use Carbon\Carbon;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -57,7 +58,7 @@ class SolarGenerationResource extends Resource
                     modifyRuleUsing: fn (Unique $rule, $get) => $rule->where('consumer_unit_id', $get('consumer_unit_id')),
                 )
                 ->validationMessages(['unique' => 'Já existe geração cadastrada para esta unidade neste mês.'])
-                ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('Y-m-d') : null),
+                ->formatStateUsing(fn ($state) => $state ? Carbon::parse($state)->format('Y-m-d') : null),
             TextInput::make('generated_kwh')
                 ->label('Geração total no mês')
                 ->numeric()->minValue(0)->suffix('kWh')->required()
@@ -80,16 +81,22 @@ class SolarGenerationResource extends Resource
                 TextColumn::make('self')->label('Autoconsumo (kWh)')->alignEnd()
                     ->state(fn (SolarGeneration $r) => ($h = self::history($r)) ? max($r->generated_kwh - $h->injected_kwh, 0) : null)
                     ->numeric(decimalPlaces: 0, decimalSeparator: ',', thousandsSeparator: '.')->placeholder('—'),
+                TextColumn::make('source')->label('Origem')->badge()
+                    ->formatStateUsing(fn ($state) => $state === 'planilha' ? 'Planilha' : 'Manual')
+                    ->color(fn ($state) => $state === 'planilha' ? 'info' : 'gray'),
                 TextColumn::make('notes')->label('Obs.')->limit(30)->toggleable(),
             ])
             ->defaultSort('reference_month', 'desc')
-            ->recordActions([EditAction::make(), DeleteAction::make()])
+            ->recordActions([
+                EditAction::make()->mutateFormDataUsing(fn (array $data) => $data + ['source' => 'manual']),
+                DeleteAction::make(),
+            ])
             ->toolbarActions([DeleteBulkAction::make()]);
     }
 
     private static function history(SolarGeneration $record)
     {
-        return \App\Models\EnergyHistory::where('consumer_unit_id', $record->consumer_unit_id)
+        return EnergyHistory::where('consumer_unit_id', $record->consumer_unit_id)
             ->where('reference_month', $record->reference_month->format('Y-m-d'))->first();
     }
 

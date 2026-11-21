@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\SolarGenerations\Pages;
 
+use App\Filament\Actions\ImportSolarProductionAction;
 use App\Filament\Resources\SolarGenerations\SolarGenerationResource;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ManageRecords;
@@ -12,6 +13,9 @@ class ManageSolarGenerations extends ManageRecords
 
     protected function getHeaderActions(): array
     {
-        return [CreateAction::make()->label('Informar geração')];
+        return [
+            ImportSolarProductionAction::make(),
+            CreateAction::make()->label('Informar geração'),
+        ];
     }
 }
