@@ -77,7 +77,13 @@ class CostPerKwhTest extends TestCase
         $this->assertEqualsWithDelta(0.4, EnergyDashboard::make($generator->id, '2026-10', '2026-11')->totals()['solar_cost_per_kwh'], 0.0001);
 
         Livewire::test(EnergyStatsOverview::class, ['pageFilters' => ['unit_id' => $generator->id]])->assertSee('Custo do kWh das placas');
-        Livewire::test(EnergyStatsOverview::class, ['record' => $receiver])->assertDontSee('Custo do kWh das placas');
+        Livewire::test(EnergyStatsOverview::class, ['record' => $receiver])
+            ->assertDontSee('Custo do kWh das placas')
+            ->assertDontSee('Geração das placas')
+            ->assertDontSee('Autoconsumo das placas')
+            ->assertDontSee('Injetado na rede');
+        Livewire::test(EnergyStatsOverview::class, ['record' => $generator])
+            ->assertSee('Geração das placas')->assertSee('Autoconsumo das placas')->assertSee('Injetado na rede');
     }
 
     public function test_rate_is_null_without_kwh(): void

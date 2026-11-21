@@ -32,15 +32,7 @@ class EnergyStatsOverview extends StatsOverviewWidget
 
         $isReceiverScope = $this->energy()->units()->count() === 1
             && $this->energy()->units()->first()->role === ConsumerUnit::ROLE_RECEIVER;
-        $solarCostStat = $isReceiverScope ? [] : [
-            Stat::make('Custo do kWh das placas', $t['solar_cost_per_kwh'] !== null ? 'R$ '.number_format($t['solar_cost_per_kwh'], 4, ',', '.') : '—')
-                ->description('parcelas ÷ geração dos meses do período filtrado')
-                ->icon(Heroicon::OutlinedCalculator)->color('gray'),
-        ];
-
-        return [
-            ...$unitCostStat,
-            ...$solarCostStat,
+        $generationStats = $isReceiverScope ? [] : [
             Stat::make('Geração das placas', $kwh($t['generated']))
                 ->description($t['generated'] > 0 ? 'informada manualmente' : 'cadastre a geração mensal')
                 ->icon(Heroicon::OutlinedSun)->color('warning'),
@@ -50,6 +42,17 @@ class EnergyStatsOverview extends StatsOverviewWidget
             Stat::make('Injetado na rede', $kwh($t['injected']))
                 ->description('energia enviada à distribuidora')
                 ->icon(Heroicon::OutlinedArrowUpCircle)->color('success'),
+        ];
+        $solarCostStat = $isReceiverScope ? [] : [
+            Stat::make('Custo do kWh das placas', $t['solar_cost_per_kwh'] !== null ? 'R$ '.number_format($t['solar_cost_per_kwh'], 4, ',', '.') : '—')
+                ->description('parcelas ÷ geração dos meses do período filtrado')
+                ->icon(Heroicon::OutlinedCalculator)->color('gray'),
+        ];
+
+        return [
+            ...$unitCostStat,
+            ...$solarCostStat,
+            ...$generationStats,
             Stat::make('Transferido a outras UCs', $kwh($t['transferred']))
                 ->description('créditos distribuídos')
                 ->icon(Heroicon::OutlinedArrowsRightLeft)->color('info'),
