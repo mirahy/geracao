@@ -9,7 +9,6 @@ use App\Services\Solar\SolarGenerationConsolidator;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\Storage;
@@ -24,7 +23,7 @@ class ImportSolarProductionAction
             ->icon(Heroicon::OutlinedTableCells)
             ->color('primary')
             ->modalHeading('Importar produção diária das placas')
-            ->modalDescription('Envie a planilha "Estatísticas Diárias" (.xlsx) do aplicativo do inversor. Os dias são somados conforme o período de leitura de cada fatura da unidade geradora e gravados como a geração do mês. Lançamentos manuais não são sobrescritos.')
+            ->modalDescription('Envie a planilha "Estatísticas Diárias" (.xlsx) do aplicativo do inversor. Os dias são somados conforme o período de leitura de cada fatura da unidade geradora. Períodos incompletos e valores diferentes dos lançados manualmente abrem uma tela para você decidir.')
             ->modalSubmitActionLabel('Importar')
             ->schema([
                 Select::make('consumer_unit_id')
@@ -40,12 +39,8 @@ class ImportSolarProductionAction
                     ->directory('imports')
                     ->visibility('private')
                     ->required(),
-                Toggle::make('allow_incomplete')
-                    ->label('Gravar também períodos incompletos')
-                    ->helperText('Quando a planilha não cobre todos os dias do período da fatura, grava a soma dos dias disponíveis (marcada como parcial nas observações). Desligado, esses meses são ignorados.')
-                    ->default(false),
             ])
-            ->action(function (array $data): void {
+            ->action(function (array $data, $livewire): void {
                 $disk = Storage::disk('local');
                 $path = $disk->path($data['file']);
 
@@ -68,21 +63,23 @@ class ImportSolarProductionAction
                     );
                 }
 
-                $result = app(SolarGenerationConsolidator::class)->consolidate($unit, (bool) ($data['allow_incomplete'] ?? false));
-
-                $body = collect([
-                    count($rows).' dia(s) importado(s).',
-                    $result['updated'] ? "{$result['updated']} mês(es) atualizado(s) pelo período da fatura." : 'Nenhum mês fechado: importe as faturas da unidade geradora cujo período esteja coberto pela planilha.',
-                    $result['incomplete'] ? 'Períodos com dias faltando ('.($data['allow_incomplete'] ?? false ? 'gravados como parciais' : 'não gravados').'): '.implode(', ', $result['incomplete']).'.' : null,
-                    $result['kept_manual'] ? 'Mantidos os valores manuais de: '.implode(', ', $result['kept_manual']).'.' : null,
-                ])->filter()->implode("\n");
+                $result = app(SolarGenerationConsolidator::class)->consolidate($unit);
+                $pending = $result['pending']->count();
 
                 Notification::make()
                     ->title('Planilha importada')
-                    ->body($body)
-                    ->color($result['incomplete'] ? 'warning' : 'success')
-                    ->persistent((bool) $result['incomplete'])
+                    ->body(collect([
+                        count($rows).' dia(s) importado(s).',
+                        $result['updated'] ? "{$result['updated']} mês(es) gravado(s) pelo período da fatura." : null,
+                        $pending ? "{$pending} período(s) aguardam sua decisão." : null,
+                        ! $result['updated'] && ! $pending ? 'Nenhum mês fechado: importe as faturas da unidade geradora cujo período esteja coberto pela planilha.' : null,
+                    ])->filter()->implode("\n"))
+                    ->color($pending ? 'warning' : 'success')
                     ->send();
+
+                if ($pending) {
+                    $livewire->replaceMountedAction('revisarProducaoDiaria');
+                }
             });
     }
 }
