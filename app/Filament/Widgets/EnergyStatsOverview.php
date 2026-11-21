@@ -13,7 +13,7 @@ class EnergyStatsOverview extends StatsOverviewWidget
 
     protected static ?int $sort = 1;
 
-    protected int | string | array $columnSpan = 'full';
+    protected int|string|array $columnSpan = 'full';
 
     protected function getStats(): array
     {
@@ -38,11 +38,17 @@ class EnergyStatsOverview extends StatsOverviewWidget
                 ->description('consumo total (rede + autoconsumo): '.$kwh($t['total_consumption']))
                 ->icon(Heroicon::OutlinedBolt)->color('gray'),
             Stat::make('Custo total', $brl($t['total_cost']))
-                ->description('faturas '.$brl($t['cost']).' + parcela das placas '.$brl($t['installments']))
+                ->description('faturas '.$brl($t['cost']).' + placas (após rateio) '.$brl($t['installments']))
                 ->icon(Heroicon::OutlinedBanknotes)->color('danger'),
             Stat::make('Economia total', $brl($t['total_savings']))
                 ->description('compensação '.$brl($t['savings']).' + autoconsumo '.$brl($t['self_savings']))
                 ->icon(Heroicon::OutlinedCurrencyDollar)->color('success'),
+            Stat::make('Custo do kWh das placas', $t['solar_cost_per_kwh'] !== null ? 'R$ '.number_format($t['solar_cost_per_kwh'], 4, ',', '.') : '—')
+                ->description('parcela ÷ geração do mês (último mês com geração)')
+                ->icon(Heroicon::OutlinedCalculator)->color('gray'),
+            Stat::make('Rateio cobrado das beneficiárias', $brl($t['share_charged']))
+                ->description('abatido da parcela da UC geradora: '.$brl($t['share_abated']))
+                ->icon(Heroicon::OutlinedReceiptPercent)->color('info'),
             Stat::make('Resultado líquido', $brl($t['net_result']))
                 ->description('economia total − parcela das placas')
                 ->icon(Heroicon::OutlinedScale)->color($t['net_result'] >= 0 ? 'success' : 'danger'),

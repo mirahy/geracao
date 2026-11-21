@@ -26,6 +26,8 @@ php artisan serve                      # http://localhost:8000/admin
 - **Fatura**: UC, instalação, referência, vencimento, leituras, medidor, consumo, energia injetada/compensada, saldo de créditos, itens (consumo, crédito, ajuste Lei 14.300, CIP, multa/juros), composição do valor, total.
 - **Demonstrativo**: histórico mensal (consumo medido, injetado, compensado), movimentação do mês (saldo anterior, injetado, compensado, transferido, saldo), transferências por UC de destino (% e kWh) e composição do saldo.
 
+**Custo das placas e rateio**: cadastre a parcela em *Parcelas das placas*. Custo do kWh = parcela do mês ÷ geração do mês. No mês seguinte à transferência, cada UC beneficiária paga `kWh transferido × custo do kWh` desse mês; o valor é abatido da parcela da UC geradora. Em *Unidades consumidoras*, desative "Cobrar rateio do custo das placas" para excluir uma UC do rateio (ex.: Campo Grande).
+
 **Economia** = crédito da energia compensada − ajuste GD II. **Autoconsumo** = geração − injetado.
 
 ## Testes

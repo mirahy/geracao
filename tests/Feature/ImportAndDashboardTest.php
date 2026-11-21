@@ -146,4 +146,36 @@ class ImportAndDashboardTest extends TestCase
         SolarInstallment::create(['consumer_unit_id' => $generator->id, 'start_month' => '2026-11-01', 'end_month' => null, 'amount' => 10]);
         $this->assertSame(510.0, EnergyDashboard::make(null, '2026-08', '2026-11')->installmentSeries()[3]);
     }
+
+    public function test_beneficiaries_share_solar_cost_from_previous_month_transfers(): void
+    {
+        $this->importAll();
+        $generator = ConsumerUnit::where('role', 'generator')->first();
+        $a = ConsumerUnit::where('uc_number', '25953005179')->first();
+        $other = ConsumerUnit::where('uc_number', '31085605152')->first();
+        $other->update(['bills_solar_cost' => false]); // fora do rateio (como Campo Grande)
+
+        // set/26: parcela 450 ÷ geração 1000 kWh = R$ 0,45/kWh
+        SolarGeneration::create(['consumer_unit_id' => $generator->id, 'reference_month' => '2026-09-01', 'generated_kwh' => 1000]);
+        SolarInstallment::create(['consumer_unit_id' => $generator->id, 'start_month' => '2026-08-01', 'end_month' => '2026-12-01', 'amount' => 450]);
+
+        $d = EnergyDashboard::make(null, '2026-08', '2026-11');
+        $this->assertEqualsWithDelta(0.45, $d->solarRates()['2026-09'], 0.0001);
+
+        // transferência de set/26 cobrada em out/26: 218 kWh × 0,45 = 98,10 (só a UC 259...; a outra está fora do rateio)
+        $charges = $d->shareCharges();
+        $this->assertCount(1, $charges);
+        $this->assertSame('2026-10', $charges[0]['month']);
+        $this->assertSame($a->id, $charges[0]['target']);
+        $this->assertSame(98.10, $charges[0]['amount']);
+
+        $this->assertSame([450.0, 450.0, 450.0, 450.0], $d->grossInstallmentSeries());
+        $this->assertSame([0.0, 0.0, 98.10, 0.0], $d->abatedSeries());
+        // visão geral: o rateio só redistribui, o custo total das placas não muda
+        $this->assertSame([450.0, 450.0, 450.0, 450.0], $d->installmentSeries());
+
+        // geradora: parcela abatida do rateio; beneficiária: paga o rateio
+        $this->assertSame([450.0, 450.0, 351.90, 450.0], EnergyDashboard::make($generator->id, '2026-08', '2026-11')->installmentSeries());
+        $this->assertSame([0.0, 0.0, 98.10, 0.0], EnergyDashboard::make($a->id, '2026-08', '2026-11')->installmentSeries());
+    }
 }

@@ -25,6 +25,7 @@ class ConsumerUnitsTable
                 TextColumn::make('city')->label('Cidade')->searchable()->toggleable(),
                 TextColumn::make('address')->label('Endereço')->limit(40)->toggleable(isToggledHiddenByDefault: true),
                 IconColumn::make('active')->label('Ativa')->boolean(),
+                IconColumn::make('bills_solar_cost')->label('Rateio das placas')->boolean()->toggleable(),
             ])
             ->recordActions([ViewAction::make(), EditAction::make()])
             ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])])

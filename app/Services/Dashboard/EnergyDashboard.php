@@ -19,12 +19,22 @@ use Illuminate\Support\Collection;
 class EnergyDashboard
 {
     private ?Collection $units = null;
+
     private ?Collection $invoices = null;
+
     private ?Collection $histories = null;
+
     private ?Collection $statements = null;
+
     private ?Collection $transfers = null;
+
     private ?Collection $generations = null;
+
     private ?Collection $installments = null;
+
+    private ?array $rates = null;
+
+    private ?Collection $shareCharges = null;
 
     /**
      * @param  int|null  $unitId  limita a uma UC (null = todas)
@@ -239,16 +249,114 @@ class EnergyDashboard
     }
 
     /**
-     * Parcela das placas (R$) paga em cada mês do período.
+     * Custo do kWh gerado pelas placas, por mês ("Y-m"): parcela do mês ÷ geração total do mês.
+     * Calculado sobre todas as UCs, sem filtros, porque o rateio usa meses fora do período exibido.
+     *
+     * @return array<string, float>
+     */
+    public function solarRates(): array
+    {
+        if ($this->rates !== null) {
+            return $this->rates;
+        }
+
+        $generated = SolarGeneration::all()
+            ->groupBy(fn ($g) => $g->reference_month->format('Y-m'))
+            ->map(fn ($rows) => (float) $rows->sum('generated_kwh'));
+
+        $rates = [];
+        foreach ($generated as $month => $kwh) {
+            $amount = $this->installments()->filter(fn ($i) => $i->coversMonth($month))->sum('amount');
+            if ($kwh > 0 && $amount > 0) {
+                $rates[$month] = $amount / $kwh;
+            }
+        }
+
+        return $this->rates = $rates;
+    }
+
+    /**
+     * Rateio: no mês seguinte à transferência, cada UC beneficiária paga
+     * kWh recebido × custo do kWh das placas (do mês da transferência).
+     * UCs com "bills_solar_cost" desligado (ex.: Campo Grande) ficam de fora.
+     *
+     * @return Collection<int, array{source: int, target: int, month: string, kwh: float, rate: float, amount: float}>
+     */
+    public function shareCharges(): Collection
+    {
+        $months = $this->months();
+        if (! $months) {
+            return collect();
+        }
+
+        $first = CarbonImmutable::createFromFormat('Y-m-d', $months[0].'-01')->subMonth()->format('Y-m-d');
+        $last = CarbonImmutable::createFromFormat('Y-m-d', end($months).'-01')->subMonth()->format('Y-m-d');
+
+        return $this->shareCharges ??= CreditTransfer::with('target')
+            ->whereBetween('reference_month', [$first, $last])
+            ->get()
+            ->filter(fn ($t) => $t->target->bills_solar_cost && $t->source_unit_id !== $t->target_unit_id)
+            ->map(function ($t) {
+                $rate = $this->solarRates()[$t->reference_month->format('Y-m')] ?? null;
+
+                return $rate === null ? null : [
+                    'source' => $t->source_unit_id,
+                    'target' => $t->target_unit_id,
+                    'month' => $t->reference_month->addMonth()->format('Y-m'),
+                    'kwh' => $t->kwh,
+                    'rate' => $rate,
+                    'amount' => round($t->kwh * $rate, 2),
+                ];
+            })
+            ->filter()
+            ->values();
+    }
+
+    /** @return list<float> parcela bruta paga pelas UCs geradoras no escopo, por mês */
+    public function grossInstallmentSeries(): array
+    {
+        $ids = $this->units()->pluck('id');
+
+        return array_map(
+            fn ($month) => round($this->installments()->filter(fn ($i) => $ids->contains($i->consumer_unit_id) && $i->coversMonth($month))->sum('amount'), 2),
+            $this->months()
+        );
+    }
+
+    /** @return list<float> rateio abatido da parcela das UCs geradoras do escopo */
+    public function abatedSeries(): array
+    {
+        $ids = $this->units()->pluck('id');
+
+        return array_map(
+            fn ($month) => round($this->shareCharges()->filter(fn ($c) => $c['month'] === $month && $ids->contains($c['source']))->sum('amount'), 2),
+            $this->months()
+        );
+    }
+
+    /** @return list<float> rateio cobrado das UCs beneficiárias do escopo */
+    public function chargedSeries(): array
+    {
+        $ids = $this->units()->pluck('id');
+
+        return array_map(
+            fn ($month) => round($this->shareCharges()->filter(fn ($c) => $c['month'] === $month && $ids->contains($c['target']))->sum('amount'), 2),
+            $this->months()
+        );
+    }
+
+    /**
+     * Custo das placas (R$) por mês no escopo: parcela − rateio abatido (geradora) + rateio cobrado (beneficiárias).
      *
      * @return list<float>
      */
     public function installmentSeries(): array
     {
-        return array_map(
-            fn ($month) => round($this->installments()->filter(fn ($i) => $i->coversMonth($month))->sum('amount'), 2),
-            $this->months()
-        );
+        $gross = $this->grossInstallmentSeries();
+        $abated = $this->abatedSeries();
+        $charged = $this->chargedSeries();
+
+        return array_map(fn ($i) => round($gross[$i] - $abated[$i] + $charged[$i], 2), array_keys($gross));
     }
 
     /** Custo mensal total (faturas + parcela das placas) x custo estimado sem solar. @return array{with: list<float>, without: list<float>} */
@@ -287,6 +395,10 @@ class EnergyDashboard
 
         return [
             'installments' => $installments,
+            'installments_gross' => round(array_sum($this->grossInstallmentSeries()), 2),
+            'share_abated' => round(array_sum($this->abatedSeries()), 2),
+            'share_charged' => round(array_sum($this->chargedSeries()), 2),
+            'solar_cost_per_kwh' => ($rates = $this->solarRates()) ? $rates[array_key_last($rates)] : null,
             'total_cost' => round((float) $this->invoices()->sum('total_amount') + $installments, 2),
             'net_result' => round($totalSavings - $installments, 2),
             'self_consumed' => $selfKwh,
@@ -328,8 +440,7 @@ class EnergyDashboard
 
             return [
                 'unit' => $unit,
-                'installments' => round($this->installments()->where('consumer_unit_id', $unit->id)
-                    ->sum(fn ($i) => $i->amount * collect($this->months())->filter(fn ($m) => $i->coversMonth($m))->count()), 2),
+                'installments' => $this->installmentFor($unit->id),
                 'self_consumed' => (float) $self,
                 'total_consumption' => (float) $consumption + (float) $self,
                 'generated' => (float) $this->generations()->where('consumer_unit_id', $unit->id)->sum('generated_kwh'),
@@ -364,10 +475,25 @@ class EnergyDashboard
         return $query->where($column, '>=', $months[0].'-01')->where($column, '<=', end($months).'-01');
     }
 
+    /** Custo das placas de uma UC no período: parcela própria − rateio abatido + rateio cobrado. */
+    private function installmentFor(int $unitId): float
+    {
+        $months = $this->months();
+        $gross = $this->installments()->where('consumer_unit_id', $unitId)
+            ->sum(fn ($i) => $i->amount * collect($months)->filter(fn ($m) => $i->coversMonth($m))->count());
+
+        return round(
+            $gross
+            - $this->shareCharges()->where('source', $unitId)->sum('amount')
+            + $this->shareCharges()->where('target', $unitId)->sum('amount'),
+            2
+        );
+    }
+
     private function installments(): Collection
     {
-        return $this->installments ??= SolarInstallment::query()
-            ->when($this->unitId, fn ($q) => $q->where('consumer_unit_id', $this->unitId))->get();
+        // sem filtro de UC: o rateio depende das parcelas e da geração de todas as UCs geradoras
+        return $this->installments ??= SolarInstallment::all();
     }
 
     private function invoices(): Collection

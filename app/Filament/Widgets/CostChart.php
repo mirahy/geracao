@@ -29,9 +29,14 @@ class CostChart extends ChartWidget
             $datasets[] = ['label' => $name, 'data' => $values, 'backgroundColor' => ChartPalette::color(count($datasets))];
         }
 
-        $installments = $e->installmentSeries();
-        if (array_sum($installments) > 0) {
-            $datasets[] = ['label' => 'Parcela das placas', 'data' => $installments, 'backgroundColor' => '#64748b'];
+        // parcela das placas da UC geradora, já descontado o rateio cobrado das beneficiárias
+        $generatorCost = array_map(fn ($g, $a) => round($g - $a, 2), $e->grossInstallmentSeries(), $e->abatedSeries());
+        if (array_sum($generatorCost) > 0) {
+            $datasets[] = ['label' => 'Parcela das placas (geradora, após rateio)', 'data' => $generatorCost, 'backgroundColor' => '#64748b'];
+        }
+        $charged = $e->chargedSeries();
+        if (array_sum($charged) > 0) {
+            $datasets[] = ['label' => 'Rateio das placas (beneficiárias)', 'data' => $charged, 'backgroundColor' => '#94a3b8'];
         }
 
         return ['labels' => $e->labels(), 'datasets' => $datasets];

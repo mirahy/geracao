@@ -11,13 +11,14 @@ class ConsumerUnit extends Model
     use HasFactory;
 
     public const ROLE_GENERATOR = 'generator';
+
     public const ROLE_RECEIVER = 'receiver';
 
     protected $guarded = [];
 
     protected function casts(): array
     {
-        return ['active' => 'boolean'];
+        return ['active' => 'boolean', 'bills_solar_cost' => 'boolean'];
     }
 
     public function invoices(): HasMany
