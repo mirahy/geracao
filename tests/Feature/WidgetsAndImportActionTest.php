@@ -3,10 +3,10 @@
 namespace Tests\Feature;
 
 use App\Filament\Pages\Dashboard;
+use App\Filament\Resources\ConsumerUnits\Pages\ViewConsumerUnit;
 use App\Filament\Resources\Invoices\Pages\ListInvoices;
 use App\Filament\Resources\SolarGenerations\Pages\ManageSolarGenerations;
 use App\Filament\Resources\SolarInstallments\Pages\ManageSolarInstallments;
-use App\Models\SolarInstallment;
 use App\Filament\Widgets\ConsumptionChart;
 use App\Filament\Widgets\CostChart;
 use App\Filament\Widgets\CostCompositionChart;
@@ -18,6 +18,7 @@ use App\Filament\Widgets\UnitsSummaryTable;
 use App\Models\ConsumerUnit;
 use App\Models\Invoice;
 use App\Models\SolarGeneration;
+use App\Models\SolarInstallment;
 use App\Models\User;
 use App\Services\Documents\DocumentImporter;
 use App\Services\Documents\PdfTextExtractor;
@@ -131,5 +132,18 @@ class WidgetsAndImportActionTest extends TestCase
         Livewire::test(ManageSolarInstallments::class)
             ->callAction('create', ['consumer_unit_id' => $generator->id, 'amount' => 1, 'start_month' => '2026-09-01', 'end_month' => '2026-01-01'])
             ->assertHasActionErrors(['end_month']);
+    }
+
+    public function test_unit_page_filters_period_and_passes_filters_to_widgets(): void
+    {
+        $this->importFixtures();
+        $this->actingAs(User::factory()->create());
+        $generator = ConsumerUnit::where('role', 'generator')->first();
+
+        Livewire::test(ViewConsumerUnit::class, ['record' => $generator->getKey()])
+            ->assertSchemaExists('filtersForm')
+            ->fillForm(['from' => '2026-09', 'to' => '2026-11'], 'filtersForm')
+            ->assertSet('filters.from', '2026-09')
+            ->assertSet('filters.to', '2026-11');
     }
 }

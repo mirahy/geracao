@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Filament\Actions\ImportDocumentsAction;
+use App\Filament\Support\EnergyFilters;
 use App\Filament\Widgets\ConsumptionChart;
 use App\Filament\Widgets\CostChart;
 use App\Filament\Widgets\CostCompositionChart;
@@ -11,14 +12,9 @@ use App\Filament\Widgets\GenerationChart;
 use App\Filament\Widgets\SavingsChart;
 use App\Filament\Widgets\TransfersChart;
 use App\Filament\Widgets\UnitsSummaryTable;
-use App\Models\ConsumerUnit;
-use App\Services\Dashboard\EnergyDashboard;
-use Filament\Forms\Components\Select;
 use Filament\Pages\Dashboard as BaseDashboard;
 use Filament\Pages\Dashboard\Concerns\HasFiltersForm;
-use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 
 class Dashboard extends BaseDashboard
 {
@@ -30,29 +26,7 @@ class Dashboard extends BaseDashboard
 
     public function filtersForm(Schema $schema): Schema
     {
-        $months = EnergyDashboard::availableMonths();
-
-        return $schema->components([
-            Section::make()
-                ->icon(Heroicon::OutlinedFunnel)
-                ->schema([
-                    Select::make('unit_id')
-                        ->label('Unidade consumidora')
-                        ->placeholder('Todas as unidades')
-                        ->options(fn () => ConsumerUnit::orderBy('name')->pluck('name', 'id'))
-                        ->searchable(),
-                    Select::make('from')
-                        ->label('Mês inicial')
-                        ->placeholder('Últimos 12 meses')
-                        ->options($months),
-                    Select::make('to')
-                        ->label('Mês final')
-                        ->placeholder('Mais recente')
-                        ->options($months),
-                ])
-                ->columns(3)
-                ->columnSpanFull(),
-        ]);
+        return EnergyFilters::configure($schema);
     }
 
     public function getWidgets(): array
@@ -69,7 +43,7 @@ class Dashboard extends BaseDashboard
         ];
     }
 
-    public function getColumns(): int | array
+    public function getColumns(): int|array
     {
         return 2;
     }
