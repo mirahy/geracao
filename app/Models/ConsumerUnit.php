@@ -18,7 +18,7 @@ class ConsumerUnit extends Model
 
     protected function casts(): array
     {
-        return ['active' => 'boolean', 'bills_solar_cost' => 'boolean'];
+        return ['active' => 'boolean', 'bills_solar_cost' => 'boolean', 'counts_in_generator_cost' => 'boolean'];
     }
 
     public function invoices(): HasMany

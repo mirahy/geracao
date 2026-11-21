@@ -312,6 +312,54 @@ class EnergyDashboard
             ->values();
     }
 
+    /**
+     * Custo do kWh de uma UC no período filtrado.
+     *
+     * Geradora: (parcela após rateio + faturas da própria UC + faturas das beneficiárias marcadas
+     * para entrar no cálculo) ÷ geração das placas.
+     * Beneficiária: (rateio cobrado + faturas) ÷ consumo em kWh das faturas.
+     *
+     * @return array{rate: ?float, amount: float, kwh: float, parts: array<string, float>, per: string}
+     */
+    public function costPerKwh(ConsumerUnit $unit): array
+    {
+        $ids = [$unit->id];
+
+        if ($unit->role === ConsumerUnit::ROLE_GENERATOR) {
+            $included = ConsumerUnit::where('role', ConsumerUnit::ROLE_RECEIVER)->where('counts_in_generator_cost', true)->get();
+            $ids = [...$ids, ...$included->pluck('id')->all()];
+        }
+
+        $invoices = $this->inRange(Invoice::query()->whereIn('consumer_unit_id', $ids))->get();
+        $own = (float) $invoices->where('consumer_unit_id', $unit->id)->sum('total_amount');
+
+        if ($unit->role === ConsumerUnit::ROLE_GENERATOR) {
+            $parts = ['Parcela das placas (após rateio)' => $this->installmentFor($unit->id), 'Faturas da unidade' => $own];
+            foreach ($included as $receiver) {
+                $parts['Fatura: '.$receiver->name] = (float) $invoices->where('consumer_unit_id', $receiver->id)->sum('total_amount');
+            }
+            $kwh = (float) $this->inRange(SolarGeneration::query()->where('consumer_unit_id', $unit->id))->sum('generated_kwh');
+            $per = 'geração das placas';
+        } else {
+            $parts = [
+                'Rateio das placas' => (float) $this->shareCharges()->where('target', $unit->id)->sum('amount'),
+                'Faturas da unidade' => $own,
+            ];
+            $kwh = (float) $invoices->sum('consumption_kwh');
+            $per = 'consumo das faturas';
+        }
+
+        $amount = round(array_sum($parts), 2);
+
+        return ['rate' => $kwh > 0 ? $amount / $kwh : null, 'amount' => $amount, 'kwh' => $kwh, 'parts' => $parts, 'per' => $per];
+    }
+
+    /** Custo do kWh da UC quando o filtro/registro aponta uma única unidade; senão null. */
+    public function scopeCostPerKwh(): ?array
+    {
+        return $this->units()->count() === 1 ? $this->costPerKwh($this->units()->first()) : null;
+    }
+
     /** @return list<float> parcela bruta paga pelas UCs geradoras no escopo, por mês */
     public function grossInstallmentSeries(): array
     {
@@ -446,6 +494,7 @@ class EnergyDashboard
                 'cost' => (float) $invoices->sum('total_amount'),
                 'savings' => (float) $invoices->sum(fn ($i) => $i->savings),
                 'balance' => $this->balanceFor($unit),
+                'cost_per_kwh' => $this->costPerKwh($unit)['rate'],
             ];
         })->values();
     }

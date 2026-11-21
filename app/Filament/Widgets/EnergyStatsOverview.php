@@ -21,7 +21,16 @@ class EnergyStatsOverview extends StatsOverviewWidget
         $kwh = fn (?float $v) => number_format($v ?? 0, 0, ',', '.').' kWh';
         $brl = fn (float $v) => 'R$ '.number_format($v, 2, ',', '.');
 
+        $unitCost = $this->energy()->scopeCostPerKwh();
+        $unitCostStat = $unitCost === null ? [] : [
+            Stat::make('Custo do kWh da unidade', $unitCost['rate'] !== null ? 'R$ '.number_format($unitCost['rate'], 4, ',', '.') : '—')
+                ->description(collect($unitCost['parts'])->map(fn ($v, $k) => "{$k} {$brl($v)}")->implode(' + ')
+                    .' = '.$brl($unitCost['amount']).' ÷ '.number_format($unitCost['kwh'], 0, ',', '.').' kWh ('.$unitCost['per'].')')
+                ->icon(Heroicon::OutlinedCalculator)->color('warning'),
+        ];
+
         return [
+            ...$unitCostStat,
             Stat::make('Geração das placas', $kwh($t['generated']))
                 ->description($t['generated'] > 0 ? 'informada manualmente' : 'cadastre a geração mensal')
                 ->icon(Heroicon::OutlinedSun)->color('warning'),
