@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Services\Documents\DocumentImporter;
+use App\Services\Notifications\ImportNotifier;
 use Illuminate\Console\Command;
 
 class ImportDocuments extends Command
@@ -14,6 +15,7 @@ class ImportDocuments extends Command
     public function handle(DocumentImporter $importer): int
     {
         $failed = 0;
+        $imported = collect();
 
         foreach ($this->argument('arquivos') as $file) {
             if (! is_file($file)) {
@@ -27,7 +29,12 @@ class ImportDocuments extends Command
             $label = $doc->wasDuplicate ? 'IGNORADO' : strtoupper($doc->status);
             $this->line(sprintf('[%s] %s — %s', $label, basename($file), $doc->message));
             $failed += $doc->status === 'failed' ? 1 : 0;
+            if (! $doc->wasDuplicate && $doc->status === 'success') {
+                $imported->push($doc);
+            }
         }
+
+        ImportNotifier::notify($imported);
 
         return $failed ? self::FAILURE : self::SUCCESS;
     }

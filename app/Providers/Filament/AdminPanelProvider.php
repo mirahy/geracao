@@ -3,7 +3,9 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\Dashboard;
+use App\Filament\Pages\RegisterUser;
 use App\Http\Controllers\DocumentFileController;
+use App\Http\Middleware\RedirectPendingUsers;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -28,6 +30,8 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            ->registration(RegisterUser::class)
+            ->databaseNotifications()
             ->profile()
             ->colors([
                 'primary' => Color::Amber,
@@ -57,6 +61,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
+                RedirectPendingUsers::class,
             ]);
     }
 }

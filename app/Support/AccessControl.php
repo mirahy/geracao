@@ -7,6 +7,8 @@ class AccessControl
 {
     public const ADMIN_ROLE = 'Administrador';
 
+    public const CONSULTA_ROLE = 'Consulta';
+
     /** @return array<string, array<string, string>> */
     public static function groups(): array
     {

@@ -25,7 +25,13 @@ class AppServiceProvider extends ServiceProvider
     {
         // O perfil Administrador tem todas as permissões, inclusive as criadas no futuro.
         // Só vale para permissões por nome (ex.: "geracao.editar"); as regras das políticas (ex.: não excluir o próprio Administrador) continuam valendo.
-        Gate::before(fn ($user, string $ability) => str_contains($ability, '.') && $user->hasRole(AccessControl::ADMIN_ROLE) ? true : null);
+        Gate::before(function ($user, string $ability) {
+            if ($user->isPending()) {
+                return false; // cadastro aguardando liberação: nenhuma permissão
+            }
+
+            return str_contains($ability, '.') && $user->hasRole(AccessControl::ADMIN_ROLE) ? true : null;
+        });
 
         Gate::policy(Role::class, RolePolicy::class);
     }

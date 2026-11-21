@@ -3,6 +3,7 @@
 namespace App\Filament\Actions;
 
 use App\Services\Documents\DocumentImporter;
+use App\Services\Notifications\ImportNotifier;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
 use Filament\Notifications\Notification;
@@ -41,6 +42,7 @@ class ImportDocumentsAction
 
                 $ok = $duplicates = 0;
                 $failures = [];
+                $imported = collect();
 
                 foreach ((array) ($data['files'] ?? []) as $path) {
                     $document = $importer->import($disk->path($path), basename($path));
@@ -50,10 +52,13 @@ class ImportDocumentsAction
                         $duplicates++;
                     } elseif ($document->status === 'success') {
                         $ok++;
+                        $imported->push($document);
                     } else {
                         $failures[] = basename($path).': '.$document->message;
                     }
                 }
+
+                ImportNotifier::notify($imported);
 
                 $body = collect([
                     $ok ? "{$ok} arquivo(s) importado(s)." : null,

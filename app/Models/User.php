@@ -3,6 +3,9 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Filament\Resources\Users\UserResource;
+use App\Notifications\PanelNotification;
+use App\Services\Notifications\Notifier;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
@@ -12,16 +15,65 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['name', 'email', 'password'])]
+#[Fillable(['name', 'email', 'password', 'status'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, HasRoles, Notifiable;
+    use HasFactory, Notifiable;
+
+    use HasRoles {
+        hasPermissionTo as traitHasPermissionTo;
+        checkPermissionTo as traitCheckPermissionTo;
+    }
+
+    public const ACTIVE = 'active';
+
+    public const PENDING = 'pending';
 
     private ?array $unitAccessCache = null;
+
+    protected static function booted(): void
+    {
+        static::created(function (User $user): void {
+            Notifier::send(
+                Notifier::admins()->reject(fn (User $admin) => $admin->is($user) || $admin->id === Auth::id()),
+                new PanelNotification(
+                    title: 'Novo usuário criado',
+                    body: "{$user->name} ({$user->email}) foi cadastrado".($user->isPending() ? ' e aguarda atribuição de unidade.' : '.'),
+                    url: UserResource::getUrl('edit', ['record' => $user]),
+                    actionLabel: 'Abrir usuário',
+                    icon: 'heroicon-o-user-plus',
+                    color: 'success',
+                ),
+            );
+        });
+    }
+
+    /** Cadastro pendente não tem permissões (nem as do perfil). */
+    public function hasPermissionTo($permission, $guardName = null): bool
+    {
+        return ! $this->isPending() && $this->traitHasPermissionTo($permission, $guardName);
+    }
+
+    public function checkPermissionTo($permission, $guardName = null): bool
+    {
+        return ! $this->isPending() && $this->traitCheckPermissionTo($permission, $guardName);
+    }
+
+    /** Cadastro novo, ainda sem unidade atribuída: não acessa nada além da tela de solicitação. */
+    public function isPending(): bool
+    {
+        return $this->status === self::PENDING;
+    }
+
+    public function unitRequests(): HasMany
+    {
+        return $this->hasMany(UnitRequest::class);
+    }
 
     /** Aplicação de uso pessoal: todo usuário cadastrado acessa o painel (não há cadastro público). */
     public function canAccessPanel(Panel $panel): bool
