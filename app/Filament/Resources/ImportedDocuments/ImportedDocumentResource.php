@@ -5,6 +5,7 @@ namespace App\Filament\Resources\ImportedDocuments;
 use App\Filament\Resources\ImportedDocuments\Pages\ListImportedDocuments;
 use App\Models\ImportedDocument;
 use BackedEnum;
+use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Resource;
 use Filament\Support\Icons\Heroicon;
@@ -53,7 +54,12 @@ class ImportedDocumentResource extends Resource
                 TextColumn::make('message')->label('Mensagem')->limit(60)->tooltip(fn ($record) => $record->message),
             ])
             ->defaultSort('created_at', 'desc')
-            ->recordActions([DeleteAction::make()]);
+            ->recordActions([
+                Action::make('abrirPdf')->label('Ver original')->icon(Heroicon::OutlinedDocumentMagnifyingGlass)->color('gray')
+                    ->visible(fn (ImportedDocument $record): bool => $record->hasFile())
+                    ->url(fn (ImportedDocument $record): string => route('filament.admin.documents.file', $record), shouldOpenInNewTab: true),
+                DeleteAction::make(),
+            ]);
     }
 
     public static function getPages(): array

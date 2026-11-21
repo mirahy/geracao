@@ -5,12 +5,18 @@ namespace App\Filament\Resources\EnergyStatements\RelationManagers;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 
 class TransfersRelationManager extends RelationManager
 {
     protected static string $relationship = 'transfers';
 
     protected static ?string $title = 'Transferências do mês';
+
+    public static function canViewForRecord(Model $ownerRecord, string $pageClass): bool
+    {
+        return $ownerRecord->transfers()->exists();
+    }
 
     public function table(Table $table): Table
     {

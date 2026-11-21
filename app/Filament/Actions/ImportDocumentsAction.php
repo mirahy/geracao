@@ -42,7 +42,8 @@ class ImportDocumentsAction
                 $failures = [];
 
                 foreach ((array) ($data['files'] ?? []) as $path) {
-                    $document = $importer->import($disk->path($path), basename($path), $path);
+                    $document = $importer->import($disk->path($path), basename($path));
+                    $disk->delete($path); // a cópia definitiva fica em documents/{hash}.pdf
 
                     if ($document->wasDuplicate) {
                         $duplicates++;

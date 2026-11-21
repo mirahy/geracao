@@ -30,6 +30,11 @@ class EnergyStatement extends Model
         return $this->belongsTo(ConsumerUnit::class);
     }
 
+    public function document(): BelongsTo
+    {
+        return $this->belongsTo(ImportedDocument::class, 'imported_document_id');
+    }
+
     public function transfers(): HasMany
     {
         return $this->hasMany(CreditTransfer::class);

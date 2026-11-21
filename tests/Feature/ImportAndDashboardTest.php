@@ -182,4 +182,22 @@ class ImportAndDashboardTest extends TestCase
         $this->assertSame([450.0, 450.0, 351.90, 450.0], EnergyDashboard::make($generator->id, '2026-08', '2026-11')->installmentSeries());
         $this->assertSame([0.0, 0.0, 98.10, 0.0], EnergyDashboard::make($a->id, '2026-08', '2026-11')->installmentSeries());
     }
+
+    public function test_beneficiary_statement_does_not_become_generator_nor_create_transfers(): void
+    {
+        $this->importAll();
+        $transfersBefore = CreditTransfer::count();
+
+        $doc = app(DocumentImporter::class)->importText($this->fixture('demonstrativo_beneficiaria_2026_11.txt'));
+        $this->assertSame('success', $doc->status, $doc->message);
+
+        $unit = ConsumerUnit::where('uc_number', '166533905167')->first();
+        $this->assertFalse($unit->isGenerator());
+        $this->assertSame($transfersBefore, CreditTransfer::count()); // a "transferência" listada é a origem do crédito
+
+        $statement = EnergyStatement::where('consumer_unit_id', $unit->id)->first();
+        $this->assertSame(339.0, $statement->received_kwh);
+        $this->assertSame(290.0, $statement->compensated_kwh);
+        $this->assertSame(324.0, $statement->balance_available_kwh);
+    }
 }

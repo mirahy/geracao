@@ -9,6 +9,7 @@ use App\Models\EnergyStatement;
 use App\Models\ImportedDocument;
 use App\Models\Invoice;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Throwable;
 
@@ -22,9 +23,8 @@ class DocumentImporter
     /**
      * @param  string  $path  caminho local do PDF
      * @param  string|null  $originalName  nome original do arquivo enviado
-     * @param  string|null  $storedPath  caminho em que o arquivo foi guardado (para auditoria)
      */
-    public function import(string $path, ?string $originalName = null, ?string $storedPath = null): ImportedDocument
+    public function import(string $path, ?string $originalName = null): ImportedDocument
     {
         $hash = hash_file('sha256', $path);
         $name = $originalName ?: basename($path);
@@ -33,6 +33,9 @@ class DocumentImporter
         if ($existing && $existing->status === 'success') {
             $existing->message = 'Arquivo já importado anteriormente (ignorado).';
             $existing->wasDuplicate = true;
+            if (! $existing->path || ! Storage::disk('local')->exists($existing->path)) {
+                $existing->update(['path' => $this->storeOriginal($path, $hash)]);
+            }
 
             return $existing;
         }
@@ -40,7 +43,7 @@ class DocumentImporter
         $document = $existing ?? new ImportedDocument(['hash' => $hash]);
         $document->fill([
             'original_name' => $name,
-            'path' => $storedPath ?? $document->path,
+            'path' => $this->storeOriginal($path, $hash),
         ]);
 
         try {
@@ -52,6 +55,18 @@ class DocumentImporter
 
             return $document;
         }
+    }
+
+    /** Guarda uma cópia do PDF original (nomeada pelo hash) para visualização posterior. */
+    private function storeOriginal(string $path, string $hash): string
+    {
+        $target = "documents/{$hash}.pdf";
+        $disk = Storage::disk('local');
+        if (! $disk->exists($target)) {
+            $disk->put($target, file_get_contents($path));
+        }
+
+        return $target;
     }
 
     /** Importa a partir do texto já extraído (útil em testes). */
@@ -172,8 +187,17 @@ class DocumentImporter
             'holder_name' => $data['holder_name'] ?? null,
             'address' => $data['address'] ?? null,
         ]);
-        if (! $unit->isGenerator()) {
+
+        // Demonstrativo da geradora: tem energia injetada e/ou transfere créditos.
+        // Demonstrativo de beneficiária: só recebe créditos; a tabela de "transferências" lista a origem
+        // (a própria geradora), então não pode virar uma transferência partindo desta UC.
+        $movements = $data['movements'] ?? [];
+        $isBeneficiaryStatement = ($movements['injected_kwh'] ?? 0) <= 0 && ($movements['received_kwh'] ?? 0) > 0;
+        if (! $isBeneficiaryStatement && (($movements['injected_kwh'] ?? 0) > 0 || $data['transfers'] !== []) && ! $unit->isGenerator()) {
             $unit->update(['role' => ConsumerUnit::ROLE_GENERATOR]);
+        }
+        if ($isBeneficiaryStatement) {
+            $data['transfers'] = [];
         }
 
         if (! $document->exists) {
@@ -181,7 +205,6 @@ class DocumentImporter
         }
 
         $reference = $data['reference_month'];
-        $movements = $data['movements'] ?? [];
 
         // Algumas vezes o mês corrente ainda não desconta as transferências na tabela de movimentações,
         // mas elas aparecem discriminadas; o saldo disponível passa a considerá-las.

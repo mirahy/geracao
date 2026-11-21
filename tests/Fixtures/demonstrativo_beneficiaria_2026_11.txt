@@ -1,0 +1,57 @@
+                       ENERGISA MATO GROSSO DO SUL - DISTRIBUIDORA DE
+                       ENERGIA S/A
+                       www.energisa.com.br | 0800 6464 196 - CENTRAL DE ATENDIMENTO
+TITULAR EXEMPLO                                                 | Número da UC: 1.665.339.051-67
+DA SILVA                                                 AVE DAS ACACIAS, 1888, 17.102.23.021535
+                                                               BL 01 APTO 311
+
+
+Referência: 11/2026
+
+   Demonstrativo de Compensação de Energia Injetada
+                                                      Consumo Convencional
+     Ano Mês Med. KWh                 Irr.                 Injetado           Injet. Comp.           Sobra                   Bruto
+     2026 11 290                      0                    0                  0                      0                       290
+
+
+                                       Movimentações do Mês 11/2026                                              Expiração
+            Saldo         Injetado    Recebido    Compensado Transferido
+     Posto                                                               Expirado (-) Disponível                        Consumo Ciclo
+            Anterior      (+)         (+)         (-)        (-)
+     Conv
+     GD I   0             0           0           0                   0             0                 0                 0             11/2031
+     GD II 275            0           339         290                 0             0                 324               49
+     GD III 0             0           0           0                   0             0                 0                 0
+     Pt
+     GD I   0             0           0           0                   0             0                 0                 0
+     GD II 0              0           0           0                   0             0                 0                 0
+     GD III 0             0           0           0                   0             0                 0                 0
+     FPt
+     GD I   0             0           0           0                   0             0                 0                 0
+     GD II 0              0           0           0                   0             0                 0                 0
+     GD III 0             0           0           0                   0             0                 0                 0
+     Itmdr
+     GD I   0             0           0           0                   0             0                 0                 0
+     GD II 0              0           0           0                   0             0                 0                 0
+     GD III 0             0           0           0                   0             0                 0                 0
+
+
+                               Discriminação das Transferências do Mês 11 de 2026
+                                                                                    Fora
+     %      UC Comp.                 Conv                   Ponta                                               Interm.              Ciclo
+                                                                                    Ponta
+                              GD I   GD II   GD III GD I    GD II     GD III GD I   GD II        GD III GD I    GD II        GD III
+     50     91735805198       0      339     0      0       0         0      0      0            0      0       0            0      11/2026
+            TOTAL             0      339     0      0       0         0      0      0            0      0       0            0
+
+
+                                       Composição e Utilização do Saldo Anterior
+                                     Saldo
+     Ano     Mês   Posto                                            Comp/Ajustado                           Disponível               Expiração
+                                    Anterior
+                               GD I  GD II GD III           GD I          GD II         GD III     GD I         GD II        GD III
+     2026    10    Conv        0.00 275.00 0.00             0.00          0.00          0.00       0.00        275.00        0.00 10/2031
+                   Pt          0.00   0.00   0.00           0.00          0.00          0.00       0.00         0.00         0.00
+                   FPt         0.00   0.00   0.00           0.00          0.00          0.00       0.00         0.00         0.00
+                   Itmdr       0.00   0.00   0.00           0.00          0.00          0.00       0.00         0.00         0.00
+

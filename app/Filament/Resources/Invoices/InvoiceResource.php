@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Invoices;
 
+use App\Filament\Actions\ViewOriginalAction;
 use App\Filament\Resources\Invoices\Pages\ListInvoices;
 use App\Filament\Resources\Invoices\Pages\ViewInvoice;
 use App\Filament\Resources\Invoices\RelationManagers\ItemsRelationManager;
@@ -107,7 +108,7 @@ class InvoiceResource extends Resource
                     ->options(fn () => ConsumerUnit::orderBy('name')->pluck('name', 'id')),
             ])
             ->defaultSort('reference_month', 'desc')
-            ->recordActions([ViewAction::make()]);
+            ->recordActions([ViewAction::make(), ViewOriginalAction::make()]);
     }
 
     public static function getRelations(): array

@@ -2,9 +2,11 @@
 
 namespace App\Filament\Resources\EnergyStatements;
 
+use App\Filament\Actions\ViewOriginalAction;
 use App\Filament\Resources\EnergyStatements\Pages\ListEnergyStatements;
 use App\Filament\Resources\EnergyStatements\Pages\ViewEnergyStatement;
 use App\Filament\Resources\EnergyStatements\RelationManagers\TransfersRelationManager;
+use App\Models\ConsumerUnit;
 use App\Models\EnergyStatement;
 use BackedEnum;
 use Filament\Actions\ViewAction;
@@ -14,6 +16,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use UnitEnum;
 
@@ -29,7 +32,7 @@ class EnergyStatementResource extends Resource
 
     protected static ?string $pluralModelLabel = 'demonstrativos de compensação';
 
-    protected static ?string $navigationLabel = 'Compensações e transferências';
+    protected static ?string $navigationLabel = 'Demonstrativos de compensação';
 
     protected static ?int $navigationSort = 2;
 
@@ -44,7 +47,7 @@ class EnergyStatementResource extends Resource
 
         return $schema->components([
             Section::make('Movimentação do mês')->columns(4)->schema([
-                TextEntry::make('consumerUnit.name')->label('Unidade geradora'),
+                TextEntry::make('consumerUnit.name')->label('Unidade consumidora'),
                 TextEntry::make('reference_month')->label('Referência')->formatStateUsing(fn ($state) => ucfirst($state->translatedFormat('F/Y'))),
                 TextEntry::make('expiration_cycle')->label('Expira em')->placeholder('—'),
                 TextEntry::make('balance_previous_kwh')->label('Saldo anterior')->formatStateUsing($kwh),
@@ -66,15 +69,20 @@ class EnergyStatementResource extends Resource
             ->columns([
                 TextColumn::make('reference_month')->label('Referência')->sortable()
                     ->formatStateUsing(fn ($state) => ucfirst($state->translatedFormat('M/Y'))),
-                TextColumn::make('consumerUnit.name')->label('Unidade geradora'),
+                TextColumn::make('consumerUnit.name')->label('Unidade')->sortable(),
                 $kwh(TextColumn::make('balance_previous_kwh')->label('Saldo anterior')),
                 $kwh(TextColumn::make('injected_kwh')->label('Injetado')),
+                $kwh(TextColumn::make('received_kwh')->label('Recebido')),
                 $kwh(TextColumn::make('compensated_kwh')->label('Compensado')),
                 $kwh(TextColumn::make('transferred_kwh')->label('Transferido')),
                 $kwh(TextColumn::make('balance_available_kwh')->label('Saldo')->weight('bold')),
             ])
+            ->filters([
+                SelectFilter::make('consumer_unit_id')->label('Unidade')
+                    ->options(fn () => ConsumerUnit::orderBy('name')->pluck('name', 'id')),
+            ])
             ->defaultSort('reference_month', 'desc')
-            ->recordActions([ViewAction::make()]);
+            ->recordActions([ViewAction::make(), ViewOriginalAction::make()]);
     }
 
     public static function getRelations(): array
