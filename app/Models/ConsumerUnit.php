@@ -40,6 +40,11 @@ class ConsumerUnit extends Model
         return $this->hasMany(SolarGeneration::class);
     }
 
+    public function installments(): HasMany
+    {
+        return $this->hasMany(SolarInstallment::class);
+    }
+
     public function transfersSent(): HasMany
     {
         return $this->hasMany(CreditTransfer::class, 'source_unit_id');

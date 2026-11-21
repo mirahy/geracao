@@ -8,6 +8,7 @@ use App\Models\CreditTransfer;
 use App\Models\EnergyStatement;
 use App\Models\Invoice;
 use App\Models\SolarGeneration;
+use App\Models\SolarInstallment;
 use App\Models\User;
 use App\Services\Dashboard\EnergyDashboard;
 use App\Services\Documents\DocumentImporter;
@@ -123,5 +124,26 @@ class ImportAndDashboardTest extends TestCase
         }
 
         Livewire::test(ViewConsumerUnit::class, ['record' => $unit->getKey()])->assertOk();
+    }
+
+    public function test_solar_installments_are_part_of_cost_and_net_result(): void
+    {
+        $this->importAll();
+        $generator = ConsumerUnit::where('role', 'generator')->first();
+        // parcela de 500 de out/26 a dez/26 (3 meses) e parcela avulsa de 100 em ago/26
+        SolarInstallment::create(['consumer_unit_id' => $generator->id, 'start_month' => '2026-10-01', 'end_month' => '2026-12-01', 'amount' => 500]);
+        SolarInstallment::create(['consumer_unit_id' => $generator->id, 'start_month' => '2026-08-01', 'end_month' => '2026-08-01', 'amount' => 100]);
+
+        $d = EnergyDashboard::make(null, '2026-08', '2026-11');
+        $this->assertSame([100.0, 0.0, 500.0, 500.0], $d->installmentSeries());
+
+        $t = $d->totals();
+        $this->assertSame(1100.0, $t['installments']);
+        $this->assertEqualsWithDelta(306.29 + 1100, $t['total_cost'], 0.001);
+        $this->assertEqualsWithDelta($t['total_savings'] - 1100, $t['net_result'], 0.001);
+
+        // parcela sem data final continua valendo
+        SolarInstallment::create(['consumer_unit_id' => $generator->id, 'start_month' => '2026-11-01', 'end_month' => null, 'amount' => 10]);
+        $this->assertSame(510.0, EnergyDashboard::make(null, '2026-08', '2026-11')->installmentSeries()[3]);
     }
 }

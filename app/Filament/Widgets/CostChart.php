@@ -12,7 +12,7 @@ class CostChart extends ChartWidget
 
     protected static ?int $sort = 5;
 
-    protected ?string $heading = 'Custo das faturas por unidade (R$)';
+    protected ?string $heading = 'Custo por unidade: faturas + parcela das placas (R$)';
 
     protected ?string $maxHeight = '320px';
 
@@ -27,6 +27,11 @@ class CostChart extends ChartWidget
         $datasets = [];
         foreach ($e->costSeries() as $name => $values) {
             $datasets[] = ['label' => $name, 'data' => $values, 'backgroundColor' => ChartPalette::color(count($datasets))];
+        }
+
+        $installments = $e->installmentSeries();
+        if (array_sum($installments) > 0) {
+            $datasets[] = ['label' => 'Parcela das placas', 'data' => $installments, 'backgroundColor' => '#64748b'];
         }
 
         return ['labels' => $e->labels(), 'datasets' => $datasets];

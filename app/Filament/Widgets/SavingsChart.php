@@ -34,7 +34,7 @@ class SavingsChart extends ChartWidget
             'labels' => $e->labels(),
             'datasets' => [
                 ['label' => 'Sem solar', 'data' => $s['without'], 'backgroundColor' => '#fca5a5', 'borderRadius' => 4],
-                ['label' => 'Com compensação (fatura)', 'data' => $s['with'], 'backgroundColor' => '#10b981', 'borderRadius' => 4],
+                ['label' => 'Com solar (fatura + parcela)', 'data' => $s['with'], 'backgroundColor' => '#10b981', 'borderRadius' => 4],
             ],
         ];
     }

@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Filament\Pages\Dashboard;
 use App\Filament\Resources\Invoices\Pages\ListInvoices;
 use App\Filament\Resources\SolarGenerations\Pages\ManageSolarGenerations;
+use App\Filament\Resources\SolarInstallments\Pages\ManageSolarInstallments;
+use App\Models\SolarInstallment;
 use App\Filament\Widgets\ConsumptionChart;
 use App\Filament\Widgets\CostChart;
 use App\Filament\Widgets\CostCompositionChart;
@@ -112,5 +114,22 @@ class WidgetsAndImportActionTest extends TestCase
         Livewire::test(ManageSolarGenerations::class)
             ->callAction('create', ['consumer_unit_id' => $generator->id, 'reference_month' => '2026-11-01', 'generated_kwh' => 10])
             ->assertHasActionErrors(['reference_month']);
+    }
+
+    public function test_installment_can_be_created_for_a_period(): void
+    {
+        $this->importFixtures();
+        $this->actingAs(User::factory()->create());
+        $generator = ConsumerUnit::where('role', 'generator')->first();
+
+        Livewire::test(ManageSolarInstallments::class)
+            ->callAction('create', ['consumer_unit_id' => $generator->id, 'amount' => 450.9, 'start_month' => '2026-09-01', 'end_month' => '2027-08-01'])
+            ->assertHasNoActionErrors();
+
+        $this->assertSame(450.9, SolarInstallment::first()->amount);
+
+        Livewire::test(ManageSolarInstallments::class)
+            ->callAction('create', ['consumer_unit_id' => $generator->id, 'amount' => 1, 'start_month' => '2026-09-01', 'end_month' => '2026-01-01'])
+            ->assertHasActionErrors(['end_month']);
     }
 }

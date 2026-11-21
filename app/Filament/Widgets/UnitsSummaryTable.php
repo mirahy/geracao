@@ -43,6 +43,7 @@ class UnitsSummaryTable extends TableWidget
                 TextColumn::make('sent')->label('Transferido (kWh)')->alignEnd()->state($kwh('sent')),
                 TextColumn::make('received')->label('Recebido (kWh)')->alignEnd()->state($kwh('received')),
                 TextColumn::make('cost')->label('Custo')->alignEnd()->state($brl('cost')),
+                TextColumn::make('installments')->label('Parcela placas')->alignEnd()->state($brl('installments')),
                 TextColumn::make('savings')->label('Economia')->alignEnd()->state($brl('savings'))->color('success'),
                 TextColumn::make('balance')->label('Saldo (kWh)')->alignEnd()
                     ->state(fn (ConsumerUnit $r) => isset($summary[$r->id]['balance']) ? number_format($summary[$r->id]['balance'], 0, ',', '.') : '—'),

@@ -37,12 +37,15 @@ class EnergyStatsOverview extends StatsOverviewWidget
             Stat::make('Consumo da rede', $kwh($t['consumption']))
                 ->description('consumo total (rede + autoconsumo): '.$kwh($t['total_consumption']))
                 ->icon(Heroicon::OutlinedBolt)->color('gray'),
-            Stat::make('Custo das faturas', $brl($t['cost']))
-                ->description('total faturado no período')
+            Stat::make('Custo total', $brl($t['total_cost']))
+                ->description('faturas '.$brl($t['cost']).' + parcela das placas '.$brl($t['installments']))
                 ->icon(Heroicon::OutlinedBanknotes)->color('danger'),
             Stat::make('Economia total', $brl($t['total_savings']))
                 ->description('compensação '.$brl($t['savings']).' + autoconsumo '.$brl($t['self_savings']))
                 ->icon(Heroicon::OutlinedCurrencyDollar)->color('success'),
+            Stat::make('Resultado líquido', $brl($t['net_result']))
+                ->description('economia total − parcela das placas')
+                ->icon(Heroicon::OutlinedScale)->color($t['net_result'] >= 0 ? 'success' : 'danger'),
             Stat::make('Saldo de créditos', $kwh($t['balance']))
                 ->description('somatório do último saldo de cada UC')
                 ->icon(Heroicon::OutlinedBattery100)->color('primary'),

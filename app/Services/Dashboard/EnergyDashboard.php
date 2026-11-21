@@ -8,6 +8,7 @@ use App\Models\EnergyHistory;
 use App\Models\EnergyStatement;
 use App\Models\Invoice;
 use App\Models\SolarGeneration;
+use App\Models\SolarInstallment;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 
@@ -23,6 +24,7 @@ class EnergyDashboard
     private ?Collection $statements = null;
     private ?Collection $transfers = null;
     private ?Collection $generations = null;
+    private ?Collection $installments = null;
 
     /**
      * @param  int|null  $unitId  limita a uma UC (null = todas)
@@ -236,13 +238,27 @@ class EnergyDashboard
         ];
     }
 
-    /** Custo mensal total x custo estimado sem compensação. @return array{with: list<float>, without: list<float>} */
+    /**
+     * Parcela das placas (R$) paga em cada mês do período.
+     *
+     * @return list<float>
+     */
+    public function installmentSeries(): array
+    {
+        return array_map(
+            fn ($month) => round($this->installments()->filter(fn ($i) => $i->coversMonth($month))->sum('amount'), 2),
+            $this->months()
+        );
+    }
+
+    /** Custo mensal total (faturas + parcela das placas) x custo estimado sem solar. @return array{with: list<float>, without: list<float>} */
     public function savingsSeries(): array
     {
         $with = $without = [];
-        foreach ($this->months() as $month) {
+        $installments = $this->installmentSeries();
+        foreach ($this->months() as $idx => $month) {
             $rows = $this->invoices()->filter(fn ($i) => $i->reference_month->format('Y-m') === $month);
-            $with[] = round($rows->sum('total_amount'), 2);
+            $with[] = round($rows->sum('total_amount') + $installments[$idx], 2); // fatura + parcela das placas
             $without[] = round($rows->sum(fn ($i) => $i->amount_without_solar), 2);
         }
 
@@ -266,11 +282,17 @@ class EnergyDashboard
         $gridConsumption = (float) array_sum(array_map(fn ($v) => array_sum(array_filter($v, fn ($x) => $x !== null)), $this->consumptionSeries()));
         $compSavings = (float) $this->invoices()->sum(fn ($i) => $i->savings);
 
+        $installments = round(array_sum($this->installmentSeries()), 2);
+        $totalSavings = round($compSavings + $selfAmount, 2);
+
         return [
+            'installments' => $installments,
+            'total_cost' => round((float) $this->invoices()->sum('total_amount') + $installments, 2),
+            'net_result' => round($totalSavings - $installments, 2),
             'self_consumed' => $selfKwh,
             'self_savings' => round($selfAmount, 2),
             'total_consumption' => $gridConsumption + $selfKwh,
-            'total_savings' => round($compSavings + $selfAmount, 2),
+            'total_savings' => $totalSavings,
             'generated' => (float) $generated,
             'injected' => (float) array_sum(array_filter($gen['injected'], fn ($v) => $v !== null)),
             'transferred' => (float) $this->transfers()->sum('kwh'),
@@ -306,6 +328,8 @@ class EnergyDashboard
 
             return [
                 'unit' => $unit,
+                'installments' => round($this->installments()->where('consumer_unit_id', $unit->id)
+                    ->sum(fn ($i) => $i->amount * collect($this->months())->filter(fn ($m) => $i->coversMonth($m))->count()), 2),
                 'self_consumed' => (float) $self,
                 'total_consumption' => (float) $consumption + (float) $self,
                 'generated' => (float) $this->generations()->where('consumer_unit_id', $unit->id)->sum('generated_kwh'),
@@ -338,6 +362,12 @@ class EnergyDashboard
         }
 
         return $query->where($column, '>=', $months[0].'-01')->where($column, '<=', end($months).'-01');
+    }
+
+    private function installments(): Collection
+    {
+        return $this->installments ??= SolarInstallment::query()
+            ->when($this->unitId, fn ($q) => $q->where('consumer_unit_id', $this->unitId))->get();
     }
 
     private function invoices(): Collection
