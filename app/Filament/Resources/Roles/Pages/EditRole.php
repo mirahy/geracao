@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Roles\Pages;
 
 use App\Filament\Resources\Roles\RoleResource;
+use App\Services\ActivityLog\ActivityLogger;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 
@@ -35,6 +36,8 @@ class EditRole extends EditRecord
 
     protected function afterSave(): void
     {
+        $before = $this->record->permissions()->pluck('name')->all();
         $this->record->syncPermissions($this->permissionNames);
+        ActivityLogger::membershipChanged($this->record, 'Permissões', $before, $this->permissionNames);
     }
 }

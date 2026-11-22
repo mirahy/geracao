@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\UnitAccess;
 use App\Models\UnitRequest;
 use App\Models\User;
+use App\Services\ActivityLog\ActivityLogger;
 use App\Services\UnitRequests\UnitRequestService;
 use DomainException;
 use Illuminate\Http\JsonResponse;
@@ -122,7 +123,9 @@ class UserController extends Controller
     private function syncRelations(User $user, array $data): void
     {
         if (array_key_exists('roles', $data)) {
+            $before = $user->roles()->pluck('name')->all();
             $user->syncRoles($data['roles'] ?? []);
+            ActivityLogger::membershipChanged($user, 'Perfis', $before, $user->roles()->pluck('name')->all());
         }
 
         if (array_key_exists('unit_accesses', $data)) {

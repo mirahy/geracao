@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\RecordsActivity;
 use App\Models\Concerns\ScopedToAccessibleUnits;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,6 +12,10 @@ use Illuminate\Support\Facades\Storage;
 /** Pagamento (total ou parcial) do rateio de uma unidade beneficiária em um mês, com o comprovante opcional. */
 class RateioPayment extends Model
 {
+    use RecordsActivity;
+
+    public const ACTIVITY_NAME = 'pagamento do rateio';
+
     use HasFactory;
     use ScopedToAccessibleUnits;
 

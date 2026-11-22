@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\ActivityLog\ActivityLogger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -23,16 +24,22 @@ class AuthController extends Controller
         $user = User::where('email', $data['email'])->first();
 
         if (! $user || ! Hash::check($data['password'], $user->password)) {
+            ActivityLogger::access('login_failed', 'Tentativa de login recusada: '.$data['email'], $user, ['email' => $data['email']]);
+
             throw ValidationException::withMessages(['email' => ['E-mail ou senha inválidos.']]);
         }
 
         if ($user->isPending()) {
+            ActivityLogger::access('login_failed', 'Login recusado: cadastro aguardando aprovação', $user, ['email' => $data['email']]);
+
             throw ValidationException::withMessages(['email' => ['Cadastro aguardando aprovação.']]);
         }
 
         $minutes = (int) config('sanctum.expiration');
         $expiresAt = $minutes > 0 ? now()->addMinutes($minutes) : null;
         $token = $user->createToken($data['device_name'] ?? 'mobile', ['*'], $expiresAt);
+
+        ActivityLogger::access('login', 'Entrou no app', $user, ['device' => $data['device_name'] ?? 'mobile']);
 
         return response()->json([
             'token' => $token->plainTextToken,
@@ -43,6 +50,7 @@ class AuthController extends Controller
 
     public function logout(Request $request): JsonResponse
     {
+        ActivityLogger::access('logout', 'Saiu do app', $request->user());
         $request->user()->currentAccessToken()->delete();
 
         return response()->json(null, 204);

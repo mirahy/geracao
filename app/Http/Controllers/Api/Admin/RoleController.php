@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\ActivityLog\ActivityLogger;
 use App\Support\AccessControl;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -29,7 +30,7 @@ class RoleController extends Controller
     {
         abort_unless($request->user()->can('viewAny', Role::class), 403);
 
-        $roles = Role::with('permissions')->withCount('users')->orderBy('name')->get()
+        $roles = Role::with('permissions')->orderBy('name')->get()
             ->map(fn (Role $r) => $this->present($r))->values();
 
         return response()->json(['data' => $roles]);
@@ -47,8 +48,9 @@ class RoleController extends Controller
 
         $role = Role::create(['name' => $data['name'], 'guard_name' => 'web']);
         $role->syncPermissions($data['permissions'] ?? []);
+        ActivityLogger::membershipChanged($role, 'Permissões', [], $data['permissions'] ?? []);
 
-        return response()->json(['data' => $this->present($role->load('permissions')->loadCount('users'))], 201);
+        return response()->json(['data' => $this->present($role->load('permissions'))], 201);
     }
 
     public function update(Request $request, Role $role): JsonResponse
@@ -66,10 +68,12 @@ class RoleController extends Controller
             $role->update(['name' => $data['name']]);
         }
         if (array_key_exists('permissions', $data)) {
+            $before = $role->permissions()->pluck('name')->all();
             $role->syncPermissions($isAdmin ? array_keys(AccessControl::all()) : ($data['permissions'] ?? []));
+            ActivityLogger::membershipChanged($role, 'Permissões', $before, $role->permissions()->pluck('name')->all());
         }
 
-        return response()->json(['data' => $this->present($role->fresh()->load('permissions')->loadCount('users'))]);
+        return response()->json(['data' => $this->present($role->fresh()->load('permissions'))]);
     }
 
     public function destroy(Request $request, Role $role): JsonResponse
@@ -88,7 +92,7 @@ class RoleController extends Controller
             'id' => $role->id,
             'name' => $role->name,
             'permissions' => $role->permissions->pluck('name')->sort()->values(),
-            'users_count' => $role->users_count ?? $role->users()->count(),
+            'users_count' => AccessControl::roleUsersCount($role),
             'protected' => $role->name === AccessControl::ADMIN_ROLE,
         ];
     }

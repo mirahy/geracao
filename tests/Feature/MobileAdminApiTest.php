@@ -193,6 +193,7 @@ class MobileAdminApiTest extends TestCase
     {
         $this->actAs('Administrador');
 
+        $this->getJson('/api/v1/admin/roles')->assertOk()->assertJsonStructure(['data' => [['id', 'name', 'permissions', 'users_count', 'protected']]]);
         $this->getJson('/api/v1/admin/permissions')->assertOk()->assertJsonStructure(['data' => [['group', 'permissions' => [['name', 'label']]]]]);
 
         $id = $this->postJson('/api/v1/admin/roles', ['name' => 'Financeiro', 'permissions' => ['painel.ver', 'pagamentos.ver']])
@@ -343,5 +344,15 @@ class MobileAdminApiTest extends TestCase
 
         $this->actAs('Consulta');
         $this->getJson("/api/v1/invoices/{$invoice->id}/file")->assertNotFound();
+    }
+
+    public function test_role_in_use_by_users_cannot_be_deleted(): void
+    {
+        $this->actAs('Administrador');
+        $role = Role::where('name', 'Gestor')->firstOrFail();
+        User::factory()->create()->assignRole('Gestor');
+
+        $this->getJson('/api/v1/admin/roles')->assertOk()->assertJsonFragment(['name' => 'Gestor', 'users_count' => 1]);
+        $this->deleteJson("/api/v1/admin/roles/{$role->id}")->assertForbidden();
     }
 }
