@@ -47,7 +47,7 @@ class RoleController extends Controller
         ]);
 
         $role = Role::create(['name' => $data['name'], 'guard_name' => 'web']);
-        $role->syncPermissions($data['permissions'] ?? []);
+        AccessControl::syncRolePermissions($role, $data['permissions'] ?? []);
         ActivityLogger::membershipChanged($role, 'Permissões', [], $data['permissions'] ?? []);
 
         return response()->json(['data' => $this->present($role->load('permissions'))], 201);
@@ -69,7 +69,7 @@ class RoleController extends Controller
         }
         if (array_key_exists('permissions', $data)) {
             $before = $role->permissions()->pluck('name')->all();
-            $role->syncPermissions($isAdmin ? array_keys(AccessControl::all()) : ($data['permissions'] ?? []));
+            AccessControl::syncRolePermissions($role, $isAdmin ? array_keys(AccessControl::all()) : ($data['permissions'] ?? []));
             ActivityLogger::membershipChanged($role, 'Permissões', $before, $role->permissions()->pluck('name')->all());
         }
 
