@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Roles\Pages;
 
 use App\Filament\Resources\Roles\RoleResource;
 use App\Services\ActivityLog\ActivityLogger;
+use App\Support\AccessControl;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateRole extends CreateRecord
@@ -23,7 +24,7 @@ class CreateRole extends CreateRecord
 
     protected function afterCreate(): void
     {
-        $this->record->syncPermissions($this->permissionNames);
+        AccessControl::syncRolePermissions($this->record, $this->permissionNames);
         ActivityLogger::membershipChanged($this->record, 'Permissões', [], $this->permissionNames);
     }
 }

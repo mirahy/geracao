@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 /** Catálogo de permissões do sistema (nome técnico => rótulo), agrupadas para a tela de perfis. */
@@ -66,5 +67,21 @@ class AccessControl
             ->where('role_id', $role->getKey())
             ->where('model_type', (new User)->getMorphClass())
             ->count();
+    }
+
+    /**
+     * Grava as permissões do perfil criando antes, no banco, as do catálogo que ainda não existem.
+     * Uma permissão nova (ex.: "logs.ver") só entra no banco quando o seeder roda; sem isto, salvar um
+     * perfil marcando-a falharia em instalações que atualizaram o código mas não rodaram o seeder.
+     *
+     * @param  list<string>  $names
+     */
+    public static function syncRolePermissions(Role $role, array $names): void
+    {
+        foreach (array_intersect($names, array_keys(self::all())) as $name) {
+            Permission::findOrCreate($name, 'web');
+        }
+
+        $role->syncPermissions($names);
     }
 }
