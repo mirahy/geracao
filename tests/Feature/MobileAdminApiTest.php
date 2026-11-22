@@ -317,4 +317,31 @@ class MobileAdminApiTest extends TestCase
         $this->assertSame(1, $user->tokens()->count());
         $this->postJson('/api/v1/login', ['email' => 'novo@example.com', 'password' => 'nova12345'])->assertOk();
     }
+
+    public function test_invoice_original_pdf_can_be_downloaded_by_who_can_see_it(): void
+    {
+        $invoice = Invoice::where('consumer_unit_id', $this->receiver->id)->firstOrFail();
+        $document = $invoice->document;
+        $this->assertNotNull($document, 'a fatura importada deve ter o documento de origem');
+        $document->update(['path' => 'documents/teste.pdf']);
+        Storage::disk('local')->put('documents/teste.pdf', "%PDF-1.4\nfake");
+
+        $viewer = $this->actAs('Consulta');
+        UnitAccess::create(['user_id' => $viewer->id, 'consumer_unit_id' => $this->receiver->id, 'can_edit' => false]);
+
+        $this->getJson('/api/v1/invoices')->assertOk()->assertJsonPath('data.0.has_file', true);
+        $this->get("/api/v1/invoices/{$invoice->id}/file")->assertOk()->assertHeader('Content-Type', 'application/pdf');
+
+        $document->update(['path' => null]);
+        $this->getJson('/api/v1/invoices')->assertOk()->assertJsonPath('data.0.has_file', false);
+        $this->getJson("/api/v1/invoices/{$invoice->id}/file")->assertNotFound();
+    }
+
+    public function test_invoice_file_is_hidden_from_users_without_access_to_the_unit(): void
+    {
+        $invoice = Invoice::where('consumer_unit_id', $this->receiver->id)->firstOrFail();
+
+        $this->actAs('Consulta');
+        $this->getJson("/api/v1/invoices/{$invoice->id}/file")->assertNotFound();
+    }
 }

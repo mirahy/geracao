@@ -29,6 +29,7 @@ Route::prefix('v1')->group(function () {
         Route::put('units/{unit}', [UnitController::class, 'update']);
         Route::delete('units/{unit}', [UnitController::class, 'destroy']);
         Route::get('invoices', [InvoiceController::class, 'index']);
+        Route::get('invoices/{invoice}/file', [InvoiceController::class, 'file']);
         Route::get('generations', [GenerationController::class, 'index']);
         Route::post('generations', [GenerationController::class, 'store']);
         Route::post('generations/import', [GenerationController::class, 'import']);
