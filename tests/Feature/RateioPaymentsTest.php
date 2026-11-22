@@ -11,6 +11,7 @@ use App\Models\UnitAccess;
 use App\Models\User;
 use App\Services\Documents\DocumentImporter;
 use App\Services\Rateio\PaymentReceiptParser;
+use App\Services\Rateio\PaymentReceiptReader;
 use App\Services\Rateio\RateioLedger;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -192,5 +193,72 @@ class RateioPaymentsTest extends TestCase
         $this->seed(RolesAndPermissionsSeeder::class);
 
         $this->assertTrue($role->fresh()->hasPermissionTo('pagamentos.editar'));
+    }
+
+    private function fakeTesseract(string $output): string
+    {
+        $script = tempnam(sys_get_temp_dir(), 'tess');
+        file_put_contents($script, "#!/bin/sh\ncat <<'EOT'\n{$output}\nEOT\necho \"LANG=\$TESSDATA_PREFIX\" >&2\n");
+        chmod($script, 0755);
+
+        return $script;
+    }
+
+    public function test_image_receipt_is_ignored_when_ocr_is_not_configured(): void
+    {
+        config(['geracao.tesseract_binary' => null]);
+        $image = UploadedFile::fake()->image('comprovante.png', 400, 300);
+
+        $this->assertFalse(app(PaymentReceiptReader::class)->ocrEnabled());
+        $this->assertNull(app(PaymentReceiptReader::class)->read($image->getRealPath()));
+    }
+
+    public function test_image_receipt_goes_through_ocr_when_configured(): void
+    {
+        config(['geracao.tesseract_binary' => $this->fakeTesseract($this->fixture('comprovante_pix_nubank.txt'))]);
+        $image = UploadedFile::fake()->image('comprovante.png', 400, 300);
+
+        $data = app(PaymentReceiptReader::class)->read($image->getRealPath());
+
+        $this->assertSame(1211.33, $data['amount']);
+        $this->assertSame('Paulo Rogério Vitorino Barbosa', $data['payer_name']);
+        $this->assertSame('E18236120202611220010s02cad3c0ad', $data['transaction_id']);
+    }
+
+    public function test_ocr_failure_or_non_image_returns_null(): void
+    {
+        config(['geracao.tesseract_binary' => '/caminho/que/nao/existe']);
+        $image = UploadedFile::fake()->image('comprovante.png', 400, 300);
+        $this->assertNull(app(PaymentReceiptReader::class)->read($image->getRealPath()));
+
+        $notImage = UploadedFile::fake()->createWithContent('x.txt', 'não é imagem');
+        $this->assertNull(app(PaymentReceiptReader::class)->read($notImage->getRealPath()));
+    }
+
+    public function test_real_tesseract_reads_a_rendered_receipt(): void
+    {
+        $binary = trim((string) shell_exec('command -v tesseract'));
+        if ($binary === '' || ! file_exists('/usr/share/tesseract-ocr/5/tessdata/por.traineddata')) {
+            $this->markTestSkipped('Tesseract com o idioma português não está instalado.');
+        }
+
+        $image = imagecreatetruecolor(900, 260);
+        imagefill($image, 0, 0, imagecolorallocate($image, 255, 255, 255));
+        $black = imagecolorallocate($image, 0, 0, 0);
+        $font = '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf';
+        if (! file_exists($font)) {
+            $this->markTestSkipped('Fonte TrueType não disponível para montar a imagem.');
+        }
+        imagettftext($image, 28, 0, 20, 70, $black, $font, 'Valor R$ 37,50');
+        imagettftext($image, 28, 0, 20, 140, $black, $font, '21 NOV 2026 - 21:10:26');
+        $path = tempnam(sys_get_temp_dir(), 'rc').'.png';
+        imagepng($image, $path);
+
+        config(['geracao.tesseract_binary' => $binary]);
+        $data = app(PaymentReceiptReader::class)->read($path);
+        @unlink($path);
+
+        $this->assertSame(37.5, $data['amount']);
+        $this->assertSame('2026-11-21 21:10:26', $data['paid_at']->format('Y-m-d H:i:s'));
     }
 }

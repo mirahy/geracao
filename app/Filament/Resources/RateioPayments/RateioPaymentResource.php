@@ -61,7 +61,7 @@ class RateioPaymentResource extends Resource
                 ->downloadable()
                 ->live()
                 ->afterStateUpdated(fn ($state, Set $set, Get $get) => self::fillFromReceipt($state, $set, $get))
-                ->helperText('Opcional. Em PDF, o valor, a data, o pagador e o código do Pix são preenchidos automaticamente; em imagem, preencha os campos abaixo.')
+                ->helperText('Opcional. O valor, a data, o pagador e o código do Pix são preenchidos automaticamente (em imagem, só com o OCR ativado; sem ele, preencha os campos abaixo).')
                 ->columnSpanFull(),
             Select::make('consumer_unit_id')->label('Unidade beneficiária')
                 ->options(fn () => UnitOptions::editableReceiverOptions())
@@ -93,9 +93,13 @@ class RateioPaymentResource extends Resource
             return;
         }
 
-        $data = app(PaymentReceiptReader::class)->read($file->getRealPath());
+        $reader = app(PaymentReceiptReader::class);
+        $data = $reader->read($file->getRealPath());
         if ($data === null) {
-            Notification::make()->title('Comprovante anexado')->body('Não foi possível ler o texto do arquivo (imagem ou PDF escaneado). Preencha os dados abaixo.')->warning()->send();
+            $why = $reader->isPdf($file->getRealPath()) || $reader->ocrEnabled()
+                ? 'Não foi possível ler o texto do arquivo.'
+                : 'A leitura automática de imagens não está ativada.';
+            Notification::make()->title('Comprovante anexado')->body("{$why} Preencha os dados abaixo.")->warning()->send();
 
             return;
         }
@@ -121,7 +125,7 @@ class RateioPaymentResource extends Resource
 
         Notification::make()
             ->title($duplicate ? 'Comprovante já lançado' : 'Comprovante lido')
-            ->body($duplicate ? 'Já existe um pagamento com este código de transação.' : 'Confira os dados antes de salvar'.($missing ? ' e complete o que faltou.' : '.'))
+            ->body($duplicate ? 'Já existe um pagamento com este código de transação.' : (($reader->isPdf($file->getRealPath()) ? 'Confira' : 'Leitura por OCR: confira com atenção').' os dados antes de salvar').($missing ? ' e complete o que faltou.' : '.'))
             ->{$duplicate ? 'danger' : 'success'}()
             ->send();
     }
