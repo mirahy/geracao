@@ -133,9 +133,9 @@ class AccessControlTest extends TestCase
         $this->get(route('filament.admin.documents.file', $document))->assertNotFound(); // fora do escopo da unidade
 
         $noPanel = User::factory()->create();
-        $this->actingAs($noPanel)->get('/admin')->assertForbidden();
+        $this->actingAs($noPanel)->get('/')->assertForbidden();
 
-        $this->actingAs($this->userWith('Consulta', [$this->generator->id => false]))->get('/admin')->assertOk();
+        $this->actingAs($this->userWith('Consulta', [$this->generator->id => false]))->get('/')->assertOk();
     }
 
     public function test_generator_screens_are_hidden_from_users_with_only_receiver_units(): void
@@ -146,7 +146,7 @@ class AccessControlTest extends TestCase
         foreach ($resources as $resource) {
             $this->assertFalse($resource::canViewAny(), $resource);
         }
-        $this->get('/admin/solar-generations')->assertForbidden();
+        $this->get('/solar-generations')->assertForbidden();
 
         $this->actingAs($this->userWith('Gestor', [$this->receiver->id => true, $this->generator->id => false]));
         foreach ($resources as $resource) {
@@ -157,12 +157,12 @@ class AccessControlTest extends TestCase
     public function test_user_and_role_management_require_permissions(): void
     {
         $this->actingAs($this->userWith('Gestor'));
-        $this->get('/admin/users')->assertForbidden();
-        $this->get('/admin/roles')->assertForbidden();
+        $this->get('/users')->assertForbidden();
+        $this->get('/roles')->assertForbidden();
 
         $admin = User::factory()->administrator()->create();
-        $this->actingAs($admin)->get('/admin/users')->assertOk();
-        $this->get('/admin/roles')->assertOk();
+        $this->actingAs($admin)->get('/users')->assertOk();
+        $this->get('/roles')->assertOk();
     }
 
     public function test_admin_creates_user_with_role_and_unit_access(): void
@@ -223,6 +223,6 @@ class AccessControlTest extends TestCase
 
     public function test_profile_page_is_available_in_the_user_menu(): void
     {
-        $this->actingAs($this->userWith('Consulta'))->get('/admin/profile')->assertOk();
+        $this->actingAs($this->userWith('Consulta'))->get('/profile')->assertOk();
     }
 }

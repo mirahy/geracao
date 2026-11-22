@@ -57,7 +57,7 @@ class RegistrationAndNotificationsTest extends TestCase
         $admin = User::factory()->administrator()->create();
         Notification::fake();
 
-        $this->get('/admin/register')->assertOk();
+        $this->get('/register')->assertOk();
         $maria = $this->register();
 
         $this->assertTrue($maria->isPending());
@@ -75,8 +75,8 @@ class RegistrationAndNotificationsTest extends TestCase
         UnitAccess::withoutEvents(fn () => UnitAccess::create(['user_id' => $pending->id, 'consumer_unit_id' => $this->receiver->id]));
 
         $this->assertFalse($pending->can('painel.ver'));
-        $this->get('/admin')->assertRedirect(PendingApproval::getUrl());
-        $this->get('/admin/invoices')->assertRedirect(PendingApproval::getUrl());
+        $this->get('/')->assertRedirect(PendingApproval::getUrl());
+        $this->get('/invoices')->assertRedirect(PendingApproval::getUrl());
         $this->get(PendingApproval::getUrl())->assertOk();
     }
 
@@ -117,7 +117,7 @@ class RegistrationAndNotificationsTest extends TestCase
         $this->assertSame(UnitRequest::APPROVED, $request->fresh()->status);
         Notification::assertSentTo($pending, PanelNotification::class, fn ($n) => $n->title === 'Acesso liberado');
 
-        $this->actingAs($pending->fresh())->get('/admin')->assertOk();
+        $this->actingAs($pending->fresh())->get('/')->assertOk();
     }
 
     public function test_admin_can_grant_the_requested_unit_from_the_users_table(): void

@@ -74,7 +74,7 @@ class WidgetsAndImportActionTest extends TestCase
     {
         $this->actingAs(User::factory()->administrator()->create());
 
-        $this->get('/admin')->assertOk();
+        $this->get('/')->assertOk();
         foreach ([EnergyStatsOverview::class, GenerationChart::class, CostChart::class, UnitsSummaryTable::class] as $widget) {
             Livewire::test($widget)->assertOk();
         }

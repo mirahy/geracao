@@ -120,9 +120,9 @@ class ImportAndDashboardTest extends TestCase
 
         $this->actingAs($user);
         foreach ([
-            '/admin', '/admin/consumer-units', "/admin/consumer-units/{$unit->id}", "/admin/consumer-units/{$unit->id}/edit",
-            '/admin/solar-generations', '/admin/invoices', '/admin/invoices/'.Invoice::first()->id,
-            '/admin/energy-statements', '/admin/energy-statements/'.EnergyStatement::first()->id, '/admin/imported-documents',
+            '/', '/consumer-units', "/consumer-units/{$unit->id}", "/consumer-units/{$unit->id}/edit",
+            '/solar-generations', '/invoices', '/invoices/'.Invoice::first()->id,
+            '/energy-statements', '/energy-statements/'.EnergyStatement::first()->id, '/imported-documents',
         ] as $url) {
             $this->get($url)->assertOk();
         }
