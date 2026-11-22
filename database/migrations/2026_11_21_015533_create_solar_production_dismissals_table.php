@@ -18,7 +18,7 @@ return new class extends Migration
             $table->unsignedSmallInteger('days');
             $table->timestamps();
 
-            $table->unique(['consumer_unit_id', 'reference_month']);
+            $table->unique(['consumer_unit_id', 'reference_month'], 'solar_dismissals_unit_month_unique');
         });
     }
 
