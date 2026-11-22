@@ -29,8 +29,13 @@ class AuthController extends Controller
             throw ValidationException::withMessages(['email' => ['Cadastro aguardando aprovação.']]);
         }
 
+        $minutes = (int) config('sanctum.expiration');
+        $expiresAt = $minutes > 0 ? now()->addMinutes($minutes) : null;
+        $token = $user->createToken($data['device_name'] ?? 'mobile', ['*'], $expiresAt);
+
         return response()->json([
-            'token' => $user->createToken($data['device_name'] ?? 'mobile')->plainTextToken,
+            'token' => $token->plainTextToken,
+            'expires_at' => $expiresAt?->toIso8601String(),
             'user' => $this->present($user),
         ]);
     }

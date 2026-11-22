@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\GenerationController;
 use App\Http\Controllers\Api\InvoiceController;
+use App\Http\Controllers\Api\RateioPaymentController;
 use App\Http\Controllers\Api\UnitController;
 use Illuminate\Support\Facades\Route;
 
@@ -19,5 +20,14 @@ Route::prefix('v1')->group(function () {
         Route::get('invoices', [InvoiceController::class, 'index']);
         Route::get('generations', [GenerationController::class, 'index']);
         Route::post('generations', [GenerationController::class, 'store']);
+
+        Route::prefix('rateio')->group(function () {
+            Route::get('summary', [RateioPaymentController::class, 'summary']);
+            Route::get('payments', [RateioPaymentController::class, 'index']);
+            Route::post('payments', [RateioPaymentController::class, 'store']);
+            Route::delete('payments/{payment}', [RateioPaymentController::class, 'destroy']);
+            Route::get('payments/{payment}/receipt', [RateioPaymentController::class, 'receipt']);
+            Route::post('receipts/read', [RateioPaymentController::class, 'readReceipt']);
+        });
     });
 });
