@@ -58,6 +58,9 @@ class AdminPanelProvider extends PanelProvider
                 Route::get('rateio-payments/{payment}/file', RateioPaymentFileController::class)->name('rateio-payments.file');
             })
             ->brandName('Geração Solar')
+            ->brandLogo(asset('assets/logo.png'))
+            ->brandLogoHeight('2.25rem')
+            ->favicon(asset('assets/favicon.png'))
             ->sidebarCollapsibleOnDesktop()
             ->middleware([
                 EncryptCookies::class,
