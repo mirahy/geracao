@@ -25,7 +25,11 @@ class AccessControl
                 'todas_unidades.ver' => 'Ver todas as unidades (ignora a lista de unidades do usuário)',
                 'todas_unidades.editar' => 'Editar todas as unidades (ignora a lista de unidades do usuário)',
             ],
-            'Administração' => ['usuarios.gerenciar' => 'Gerenciar usuários', 'perfis.gerenciar' => 'Gerenciar perfis e permissões'],
+            'Administração' => [
+                'usuarios.gerenciar' => 'Gerenciar usuários',
+                'perfis.gerenciar' => 'Gerenciar perfis e permissões',
+                'solicitacoes.gerenciar' => 'Aprovar ou recusar solicitações de acesso a unidades',
+            ],
         ];
     }
 

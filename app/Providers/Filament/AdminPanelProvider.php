@@ -4,9 +4,11 @@ namespace App\Providers\Filament;
 
 use App\Filament\Pages\Dashboard;
 use App\Filament\Pages\RegisterUser;
+use App\Filament\Pages\UnitAccessRequests;
 use App\Http\Controllers\DocumentFileController;
 use App\Http\Controllers\RateioPaymentFileController;
 use App\Http\Middleware\RedirectPendingUsers;
+use Filament\Actions\Action;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -14,6 +16,7 @@ use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\Support\Icons\Heroicon;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -34,6 +37,12 @@ class AdminPanelProvider extends PanelProvider
             ->registration(RegisterUser::class)
             ->databaseNotifications()
             ->profile()
+            ->userMenuItems([
+                Action::make('unitAccessRequests')->label('Solicitar acesso a unidades')
+                    ->icon(Heroicon::OutlinedKey)
+                    ->url(fn (): string => UnitAccessRequests::getUrl())
+                    ->visible(fn (): bool => UnitAccessRequests::canAccess()),
+            ])
             ->colors([
                 'primary' => Color::Amber,
                 'gray' => Color::Slate,

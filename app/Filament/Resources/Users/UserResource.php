@@ -8,6 +8,7 @@ use App\Filament\Resources\Users\Pages\ListUsers;
 use App\Models\ConsumerUnit;
 use App\Models\UnitRequest;
 use App\Models\User;
+use App\Services\UnitRequests\UnitRequestService;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
@@ -101,7 +102,7 @@ class UserResource extends Resource
                     ->modalDescription('O usuário passa a ver a unidade solicitada (somente leitura) e o acesso é liberado. Você pode ajustar depois na edição do usuário.')
                     ->action(function (User $record): void {
                         $request = $record->unitRequests()->where('status', UnitRequest::PENDING)->latest()->first();
-                        $record->unitAccesses()->firstOrCreate(['consumer_unit_id' => $request->consumer_unit_id], ['can_edit' => false]);
+                        app(UnitRequestService::class)->approve($request, auth()->user());
                         Notification::make()->title('Acesso liberado')->success()->send();
                     }),
                 EditAction::make(),

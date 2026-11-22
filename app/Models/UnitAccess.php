@@ -27,7 +27,8 @@ class UnitAccess extends Model
             }
 
             $user->forceFill(['status' => User::ACTIVE])->save();
-            $user->unitRequests()->where('status', UnitRequest::PENDING)->update(['status' => UnitRequest::APPROVED]);
+            $user->unitRequests()->where('status', UnitRequest::PENDING)->where('consumer_unit_id', $access->consumer_unit_id)
+                ->update(['status' => UnitRequest::APPROVED, 'decided_at' => now()]);
 
             Notifier::send([$user], new PanelNotification(
                 title: 'Acesso liberado',
