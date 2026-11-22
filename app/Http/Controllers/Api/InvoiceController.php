@@ -13,10 +13,16 @@ class InvoiceController extends Controller
     {
         abort_unless($request->user()->can('faturas.ver'), 403);
 
-        $unitId = $request->validate(['unit_id' => ['nullable', 'integer']])['unit_id'] ?? null;
+        $filters = $request->validate([
+            'unit_id' => ['nullable', 'integer'],
+            'from' => ['nullable', 'date_format:Y-m'],
+            'to' => ['nullable', 'date_format:Y-m'],
+        ]);
 
         $invoices = Invoice::with('consumerUnit')
-            ->when($unitId, fn ($q) => $q->where('consumer_unit_id', $unitId))
+            ->when($filters['unit_id'] ?? null, fn ($q, $id) => $q->where('consumer_unit_id', $id))
+            ->when($filters['from'] ?? null, fn ($q, $from) => $q->where('reference_month', '>=', $from.'-01'))
+            ->when($filters['to'] ?? null, fn ($q, $to) => $q->where('reference_month', '<=', $to.'-01'))
             ->orderByDesc('reference_month')
             ->limit(120)
             ->get()
