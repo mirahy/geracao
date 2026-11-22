@@ -15,6 +15,7 @@ use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
 use Spatie\Permission\Models\Role;
@@ -269,5 +270,51 @@ class MobileAdminApiTest extends TestCase
             ->assertOk()->assertJsonPath('data.amount', 900)->assertJsonPath('data.end_month', '2026-12-01');
         $this->getJson('/api/v1/admin/installments')->assertOk()->assertJsonCount(1, 'data');
         $this->deleteJson("/api/v1/admin/installments/{$id}")->assertNoContent();
+    }
+
+    public function test_bulk_decision_on_unit_requests_skips_the_ones_already_answered(): void
+    {
+        $this->actAs('Administrador');
+        $user = User::factory()->create();
+        $other = User::factory()->create();
+        $a = UnitRequest::create(['user_id' => $user->id, 'consumer_unit_id' => $this->receiver->id, 'status' => UnitRequest::PENDING]);
+        $b = UnitRequest::create(['user_id' => $other->id, 'consumer_unit_id' => $this->receiver->id, 'status' => UnitRequest::PENDING]);
+        $answered = UnitRequest::create(['user_id' => $user->id, 'consumer_unit_id' => $this->generator->id, 'status' => UnitRequest::REJECTED]);
+
+        $this->postJson('/api/v1/admin/unit-requests/bulk', ['ids' => [$a->id, $answered->id], 'action' => 'approve'])
+            ->assertOk()->assertJsonPath('data.done', 1)->assertJsonPath('data.skipped', 1);
+        $this->assertSame(UnitRequest::APPROVED, $a->fresh()->status);
+        $this->assertFalse($user->unitAccesses()->where('consumer_unit_id', $this->receiver->id)->value('can_edit'));
+
+        $this->postJson('/api/v1/admin/unit-requests/bulk', ['ids' => [$b->id], 'action' => 'reject', 'note' => 'Sem necessidade'])
+            ->assertOk()->assertJsonPath('data.done', 1);
+        $this->assertSame('Sem necessidade', $b->fresh()->decision_note);
+
+        $this->postJson('/api/v1/admin/unit-requests/bulk', ['ids' => [], 'action' => 'approve'])->assertStatus(422);
+
+        $this->actAs('Gestor');
+        $this->postJson('/api/v1/admin/unit-requests/bulk', ['ids' => [$a->id], 'action' => 'reject'])->assertForbidden();
+    }
+
+    public function test_user_updates_own_profile_and_password(): void
+    {
+        $user = User::factory()->create(['password' => Hash::make('antiga123')]);
+        $user->assignRole('Consulta');
+        $other = User::factory()->create(['email' => 'outro@example.com']);
+
+        $token = $this->postJson('/api/v1/login', ['email' => $user->email, 'password' => 'antiga123'])->assertOk()->json('token');
+        $this->postJson('/api/v1/login', ['email' => $user->email, 'password' => 'antiga123'])->assertOk();
+        $headers = ['Authorization' => 'Bearer '.$token];
+
+        $this->putJson('/api/v1/me', ['name' => 'Novo Nome', 'email' => 'novo@example.com'], $headers)
+            ->assertOk()->assertJsonPath('user.name', 'Novo Nome')->assertJsonPath('user.email', 'novo@example.com');
+        $this->putJson('/api/v1/me', ['name' => 'X', 'email' => $other->email], $headers)->assertStatus(422);
+
+        $this->putJson('/api/v1/me/password', ['current_password' => 'errada', 'password' => 'nova12345', 'password_confirmation' => 'nova12345'], $headers)->assertStatus(422);
+        $this->putJson('/api/v1/me/password', ['current_password' => 'antiga123', 'password' => 'curta', 'password_confirmation' => 'curta'], $headers)->assertStatus(422);
+        $this->putJson('/api/v1/me/password', ['current_password' => 'antiga123', 'password' => 'nova12345', 'password_confirmation' => 'nova12345'], $headers)->assertNoContent();
+
+        $this->assertSame(1, $user->tokens()->count());
+        $this->postJson('/api/v1/login', ['email' => 'novo@example.com', 'password' => 'nova12345'])->assertOk();
     }
 }

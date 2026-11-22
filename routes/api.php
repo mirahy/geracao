@@ -19,6 +19,8 @@ Route::prefix('v1')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('logout', [AuthController::class, 'logout']);
         Route::get('me', [AuthController::class, 'me']);
+        Route::put('me', [AuthController::class, 'updateProfile']);
+        Route::put('me/password', [AuthController::class, 'updatePassword']);
         Route::get('months', [DashboardController::class, 'months']);
         Route::get('dashboard', [DashboardController::class, 'show']);
         Route::get('units', [UnitController::class, 'index']);
@@ -53,6 +55,7 @@ Route::prefix('v1')->group(function () {
             Route::delete('roles/{role}', [RoleController::class, 'destroy']);
 
             Route::get('unit-requests', [UnitRequestController::class, 'index']);
+            Route::post('unit-requests/bulk', [UnitRequestController::class, 'bulk']);
             Route::post('unit-requests/{unitRequest}/approve', [UnitRequestController::class, 'approve']);
             Route::post('unit-requests/{unitRequest}/reject', [UnitRequestController::class, 'reject']);
 

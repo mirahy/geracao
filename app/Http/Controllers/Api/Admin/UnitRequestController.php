@@ -45,6 +45,36 @@ class UnitRequestController extends Controller
         return $this->decide($unitRequest, fn () => app(UnitRequestService::class)->reject($unitRequest, $request->user(), $data['note'] ?? null));
     }
 
+    /** Aprova (somente leitura, ou com edição) ou recusa vários pedidos de uma vez; os já respondidos são ignorados. */
+    public function bulk(Request $request): JsonResponse
+    {
+        abort_unless($request->user()->can('viewAny', UnitRequest::class), 403);
+
+        $data = $request->validate([
+            'ids' => ['required', 'array', 'min:1', 'max:100'],
+            'ids.*' => ['integer', 'exists:unit_requests,id'],
+            'action' => ['required', 'in:approve,reject'],
+            'can_edit' => ['nullable', 'boolean'],
+            'note' => ['nullable', 'string', 'max:300'],
+        ]);
+
+        $service = app(UnitRequestService::class);
+        $ok = $failed = 0;
+
+        foreach (UnitRequest::whereIn('id', $data['ids'])->get() as $unitRequest) {
+            try {
+                $data['action'] === 'approve'
+                    ? $service->approve($unitRequest, $request->user(), (bool) ($data['can_edit'] ?? false))
+                    : $service->reject($unitRequest, $request->user(), $data['note'] ?? null);
+                $ok++;
+            } catch (DomainException) {
+                $failed++;
+            }
+        }
+
+        return response()->json(['data' => ['done' => $ok, 'skipped' => $failed]]);
+    }
+
     private function decide(UnitRequest $unitRequest, callable $decision): JsonResponse
     {
         try {
