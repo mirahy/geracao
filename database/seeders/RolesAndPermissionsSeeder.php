@@ -16,17 +16,23 @@ class RolesAndPermissionsSeeder extends Seeder
     {
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
+        $created = [];
         foreach (array_keys(AccessControl::all()) as $name) {
-            Permission::findOrCreate($name, 'web');
+            if (Permission::findOrCreate($name, 'web')->wasRecentlyCreated) {
+                $created[] = $name;
+            }
         }
 
         foreach (AccessControl::defaultRoles() as $name => $permissions) {
             $role = Role::findOrCreate($name, 'web');
 
             // O Administrador acompanha o catálogo; os demais perfis só recebem as permissões na criação,
-            // para não desfazer ajustes feitos na tela de perfis.
+            // para não desfazer ajustes feitos na tela de perfis. Permissões novas do catálogo entram
+            // nos perfis que as incluem por padrão.
             if ($name === AccessControl::ADMIN_ROLE || $role->wasRecentlyCreated) {
                 $role->syncPermissions($permissions);
+            } elseif ($added = array_intersect($permissions, $created)) {
+                $role->givePermissionTo($added);
             }
         }
 

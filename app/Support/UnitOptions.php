@@ -27,4 +27,19 @@ class UnitOptions
     {
         return self::editableGenerators()->pluck('name', 'id')->all();
     }
+
+    /** Unidades beneficiárias que pagam rateio e que o usuário pode editar. @return array<int, string> */
+    public static function editableReceiverOptions(): array
+    {
+        $user = Auth::user();
+        $ids = $user instanceof User ? $user->editableUnitIds() : null;
+
+        return ConsumerUnit::query()
+            ->where('role', ConsumerUnit::ROLE_RECEIVER)
+            ->where('bills_solar_cost', true)
+            ->when($ids !== null, fn (Builder $q) => $q->whereIn('id', $ids))
+            ->orderBy('name')
+            ->pluck('name', 'id')
+            ->all();
+    }
 }

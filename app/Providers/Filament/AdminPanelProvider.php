@@ -5,6 +5,7 @@ namespace App\Providers\Filament;
 use App\Filament\Pages\Dashboard;
 use App\Filament\Pages\RegisterUser;
 use App\Http\Controllers\DocumentFileController;
+use App\Http\Controllers\RateioPaymentFileController;
 use App\Http\Middleware\RedirectPendingUsers;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -45,6 +46,7 @@ class AdminPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->authenticatedRoutes(function () {
                 Route::get('documents/{document}/file', DocumentFileController::class)->name('documents.file');
+                Route::get('rateio-payments/{payment}/file', RateioPaymentFileController::class)->name('rateio-payments.file');
             })
             ->brandName('Geração Solar')
             ->sidebarCollapsibleOnDesktop()

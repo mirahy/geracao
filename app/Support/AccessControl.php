@@ -19,6 +19,7 @@ class AccessControl
             'Demonstrativos de compensação' => ['demonstrativos.ver' => 'Ver demonstrativos'],
             'Geração das placas' => ['geracao.ver' => 'Ver geração', 'geracao.editar' => 'Informar geração e importar a planilha diária'],
             'Parcelas das placas' => ['parcelas.ver' => 'Ver parcelas', 'parcelas.editar' => 'Criar, editar e excluir parcelas'],
+            'Pagamentos do rateio' => ['pagamentos.ver' => 'Ver pagamentos do rateio e comprovantes', 'pagamentos.editar' => 'Lançar, editar e excluir pagamentos do rateio'],
             'Importações (PDF)' => ['documentos.ver' => 'Ver importações e os PDFs originais', 'documentos.importar' => 'Importar PDFs e excluir importações'],
             'Acesso por unidade' => [
                 'todas_unidades.ver' => 'Ver todas as unidades (ignora a lista de unidades do usuário)',
@@ -37,11 +38,11 @@ class AccessControl
     /** Perfis criados na instalação. @return array<string, list<string>> */
     public static function defaultRoles(): array
     {
-        $view = ['painel.ver', 'unidades.ver', 'faturas.ver', 'demonstrativos.ver', 'geracao.ver', 'parcelas.ver', 'documentos.ver'];
+        $view = ['painel.ver', 'unidades.ver', 'faturas.ver', 'demonstrativos.ver', 'geracao.ver', 'parcelas.ver', 'documentos.ver', 'pagamentos.ver'];
 
         return [
             self::ADMIN_ROLE => array_keys(self::all()),
-            'Gestor' => [...$view, 'unidades.editar', 'geracao.editar', 'parcelas.editar', 'documentos.importar'],
+            'Gestor' => [...$view, 'unidades.editar', 'geracao.editar', 'parcelas.editar', 'documentos.importar', 'pagamentos.editar'],
             'Consulta' => $view,
         ];
     }

@@ -1,0 +1,19 @@
+Comprovante de Pix
+21/nov/2026 - 193625
+Valor
+R$ 11,33
+Para
+FULANO DE TAL
+BELTRANO SOUZA
+***.000.000**
+BCO DO BRASIL S.A.
+De
+MARIA APARECIDA DA
+SILVA ROCHA
+***.111.111**
+PICPAY
+ID da transação
+E22896431202611212236jLM3c4283
+4d
+Dados bancários do recebedor
+AG 0000 | CC 000000
