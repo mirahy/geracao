@@ -7,6 +7,7 @@ use App\Filament\Pages\RegisterUser;
 use App\Filament\Pages\UnitAccessRequests;
 use App\Http\Controllers\DocumentFileController;
 use App\Http\Controllers\RateioPaymentFileController;
+use App\Http\Middleware\LogPanelView;
 use App\Http\Middleware\RedirectPendingUsers;
 use Filament\Actions\Action;
 use Filament\Http\Middleware\Authenticate;
@@ -76,6 +77,7 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
                 RedirectPendingUsers::class,
+                LogPanelView::class,
             ]);
     }
 }

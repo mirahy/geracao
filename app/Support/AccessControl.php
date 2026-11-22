@@ -2,6 +2,10 @@
 
 namespace App\Support;
 
+use App\Models\User;
+use Illuminate\Support\Facades\DB;
+use Spatie\Permission\Models\Role;
+
 /** Catálogo de permissões do sistema (nome técnico => rótulo), agrupadas para a tela de perfis. */
 class AccessControl
 {
@@ -29,6 +33,7 @@ class AccessControl
                 'usuarios.gerenciar' => 'Gerenciar usuários',
                 'perfis.gerenciar' => 'Gerenciar perfis e permissões',
                 'solicitacoes.gerenciar' => 'Aprovar ou recusar solicitações de acesso a unidades',
+                'logs.ver' => 'Ver o registro de atividades (acessos, visualizações e alterações)',
             ],
         ];
     }
@@ -49,5 +54,17 @@ class AccessControl
             'Gestor' => [...$view, 'unidades.editar', 'geracao.editar', 'parcelas.editar', 'documentos.importar', 'pagamentos.editar'],
             'Consulta' => $view,
         ];
+    }
+
+    /**
+     * Usuários que têm o perfil. Consulta direta à tabela pivô: a relação Role::users() do Spatie resolve o
+     * model pelo guard padrão, que sob autenticação Sanctum (API) é "sanctum" e não tem model.
+     */
+    public static function roleUsersCount(Role $role): int
+    {
+        return DB::table(config('permission.table_names.model_has_roles'))
+            ->where('role_id', $role->getKey())
+            ->where('model_type', (new User)->getMorphClass())
+            ->count();
     }
 }

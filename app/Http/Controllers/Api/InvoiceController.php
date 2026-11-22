@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Invoice;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class InvoiceController extends Controller
 {
@@ -19,7 +21,7 @@ class InvoiceController extends Controller
             'to' => ['nullable', 'date_format:Y-m'],
         ]);
 
-        $invoices = Invoice::with('consumerUnit')
+        $invoices = Invoice::with(['consumerUnit', 'document'])
             ->when($filters['unit_id'] ?? null, fn ($q, $id) => $q->where('consumer_unit_id', $id))
             ->when($filters['from'] ?? null, fn ($q, $from) => $q->where('reference_month', '>=', $from.'-01'))
             ->when($filters['to'] ?? null, fn ($q, $to) => $q->where('reference_month', '<=', $to.'-01'))
@@ -39,8 +41,23 @@ class InvoiceController extends Controller
                 'credit_balance_kwh' => (float) $i->credit_balance_kwh,
                 'total_amount' => $i->total_amount,
                 'savings' => $i->savings,
+                'has_file' => (bool) $i->document?->hasFile(),
             ]);
 
         return response()->json(['data' => $invoices]);
+    }
+
+    /** Entrega o PDF original da fatura importada. */
+    public function file(Request $request, Invoice $invoice): StreamedResponse
+    {
+        abort_unless($request->user()->can('view', $invoice), 403);
+
+        $document = $invoice->document;
+        abort_unless($document?->hasFile(), 404, 'Arquivo original não disponível.');
+
+        return Storage::disk('local')->response($document->path, $document->original_name, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="'.str_replace('"', '', $document->original_name).'"',
+        ]);
     }
 }

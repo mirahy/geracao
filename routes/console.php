@@ -10,3 +10,6 @@ Artisan::command('inspire', function () {
 
 // Remove os tokens da API mobile vencidos há mais de 24 horas.
 Schedule::command('sanctum:prune-expired --hours=24')->daily();
+
+// Remove os registros de atividade vencidos pela retenção configurada (ACTIVITY_LOG_RETENTION_DAYS).
+Schedule::command('activitylog:clean --force')->daily();

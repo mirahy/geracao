@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Filament\Resources\Users\UserResource;
+// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Models\Concerns\RecordsActivity;
 use App\Notifications\PanelNotification;
 use App\Services\Notifications\Notifier;
 use Database\Factories\UserFactory;
@@ -23,6 +24,10 @@ use Spatie\Permission\Traits\HasRoles;
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements FilamentUser
 {
+    use RecordsActivity;
+
+    public const ACTIVITY_NAME = 'usuário';
+
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
 

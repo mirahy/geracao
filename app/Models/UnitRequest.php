@@ -2,12 +2,17 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\RecordsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /** Pedido de acesso (somente leitura) a uma unidade consumidora; o administrador aprova ou recusa. */
 class UnitRequest extends Model
 {
+    use RecordsActivity;
+
+    public const ACTIVITY_NAME = 'solicitação de acesso';
+
     public const PENDING = 'pending';
 
     public const APPROVED = 'approved';

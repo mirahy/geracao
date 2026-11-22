@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\RecordsActivity;
 use App\Notifications\PanelNotification;
 use App\Services\Notifications\Notifier;
 use Filament\Facades\Filament;
@@ -10,6 +11,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class UnitAccess extends Model
 {
+    use RecordsActivity;
+
+    public const ACTIVITY_NAME = 'acesso a unidade';
+
     protected $guarded = [];
 
     protected function casts(): array

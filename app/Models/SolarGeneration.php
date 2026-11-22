@@ -2,12 +2,17 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\RecordsActivity;
 use App\Models\Concerns\ScopedToAccessibleUnits;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class SolarGeneration extends Model
 {
+    use RecordsActivity;
+
+    public const ACTIVITY_NAME = 'geração das placas';
+
     use ScopedToAccessibleUnits;
 
     protected $guarded = [];

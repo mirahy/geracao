@@ -9,14 +9,16 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\DocumentController;
 use App\Http\Controllers\Api\GenerationController;
 use App\Http\Controllers\Api\InvoiceController;
+use App\Http\Controllers\Api\LogController;
 use App\Http\Controllers\Api\RateioPaymentController;
 use App\Http\Controllers\Api\UnitController;
+use App\Http\Middleware\LogApiView;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
     Route::post('login', [AuthController::class, 'login'])->middleware('throttle:10,1');
 
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware(['auth:sanctum', LogApiView::class])->group(function () {
         Route::post('logout', [AuthController::class, 'logout']);
         Route::get('me', [AuthController::class, 'me']);
         Route::put('me', [AuthController::class, 'updateProfile']);
@@ -29,6 +31,7 @@ Route::prefix('v1')->group(function () {
         Route::put('units/{unit}', [UnitController::class, 'update']);
         Route::delete('units/{unit}', [UnitController::class, 'destroy']);
         Route::get('invoices', [InvoiceController::class, 'index']);
+        Route::get('invoices/{invoice}/file', [InvoiceController::class, 'file']);
         Route::get('generations', [GenerationController::class, 'index']);
         Route::post('generations', [GenerationController::class, 'store']);
         Route::post('generations/import', [GenerationController::class, 'import']);
@@ -39,6 +42,8 @@ Route::prefix('v1')->group(function () {
         Route::get('documents', [DocumentController::class, 'index']);
         Route::post('documents/import', [DocumentController::class, 'import']);
         Route::delete('documents/{document}', [DocumentController::class, 'destroy']);
+
+        Route::get('logs', [LogController::class, 'index']);
 
         Route::prefix('admin')->group(function () {
             Route::get('users', [UserController::class, 'index']);

@@ -31,7 +31,7 @@ class RolePolicy
     /** O perfil Administrador e perfis em uso por usuários não podem ser excluídos. */
     public function delete(User $user, Role $role): bool
     {
-        return $this->viewAny($user) && $role->name !== AccessControl::ADMIN_ROLE && $role->users()->doesntExist();
+        return $this->viewAny($user) && $role->name !== AccessControl::ADMIN_ROLE && AccessControl::roleUsersCount($role) === 0;
     }
 
     public function deleteAny(User $user): bool
