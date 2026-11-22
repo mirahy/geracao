@@ -7,7 +7,7 @@ COPY composer.json composer.lock ./
 RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist --no-interaction --ignore-platform-reqs
 
 # ---- aplicação: FrankenPHP (Caddy + PHP) servindo /app/public ----
-FROM dunglas/frankenphp:1-php8.3 AS app
+FROM dunglas/frankenphp:1-php8.4 AS app
 
 # poppler-utils fornece o pdftotext usado para ler os PDFs da Energisa
 RUN apt-get update \
